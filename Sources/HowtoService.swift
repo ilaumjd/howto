@@ -16,8 +16,7 @@ struct HowtoService {
     
     private func createKeyword(query: [String]) -> String {
         let site = "stackoverflow.com"
-        let question = query.joined(separator: "+")
-        let keyword = "site:\(site) \(question)"
+        let keyword = "site:\(site) \(query.joined(separator: " "))"
         return keyword
     }
     
@@ -26,10 +25,10 @@ struct HowtoService {
         request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
         do {
             let (data, _) = try await URLSession.shared.data(for: request)
-            if let htmlString = String(data: data, encoding: .utf8) {
-                return .success(htmlString)
+            guard let htmlString = String(data: data, encoding: .utf8) else {
+                return .failure(.noData)
             }
-            return .failure(.noData)
+            return .success(htmlString)
         } catch {
             return .failure(.networkError(error))
         }

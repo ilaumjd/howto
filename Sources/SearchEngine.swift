@@ -32,11 +32,14 @@ protocol SearchEngineURL {
 
 extension SearchEngineURL {
     func createURL(keyword: String) -> Result<URL, HowtoError> {
-        let urlString = String(format: searchURL, keyword)
-        if let url = URL(string: urlString) {
-            return .success(url)
+        guard let encodedKeyword = keyword.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            return .failure(.invalidURL)
         }
-        return .failure(.invalidURL)
+        let urlString = String(format: searchURL, encodedKeyword)
+        guard let url = URL(string: urlString) else {
+            return .failure(.invalidURL)
+        }
+        return .success(url)
     }
 }
 
