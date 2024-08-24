@@ -15,7 +15,8 @@ struct SearchResult {
     let snippet: String
 }
 
-struct Howto: ParsableCommand {
+@main struct Howto: AsyncParsableCommand {
+
     static let configuration = CommandConfiguration(
         commandName: "howto",
         abstract: "cli tool to find answers to programming questions using Google Search",
@@ -25,15 +26,12 @@ struct Howto: ParsableCommand {
     @Argument(help: "The programming question you want to ask")
     var query: [String]
     
-    private let site = "stackoverflow.com"
-    
-    func run() {
+    mutating func run() async {
+        let site = "stackoverflow.com"
         let question = query.joined(separator: "+")
         let urlString = "https://www.google.com/search?q=site:\(site) \(question)&hl=en"
         
-        print("URL: \(urlString)")
-        
-        let searchResult = search(urlString: urlString)
+        let searchResult = await search(urlString: urlString)
         
         switch searchResult {
         case .success(let results):
@@ -48,39 +46,25 @@ struct Howto: ParsableCommand {
         }
     }
     
-    private func search(urlString: String) -> Result<[SearchResult], HowtoError> {
+    private func search(urlString: String) async -> Result<[SearchResult], HowtoError> {
         guard let url = URL(string: urlString) else {
             return .failure(.invalidURL)
         }
         
         var request = URLRequest(url: url)
-        request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
+        request.setValue("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36", forHTTPHeaderField: "User-Agent")
         
-        let semaphore = DispatchSemaphore(value: 0)
-        var searchResult: Result<[SearchResult], HowtoError> = .failure(.noData)
-        
-        let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-            defer { semaphore.signal() }
-            
-            if let error = error {
-                searchResult = .failure(.networkError(error))
-                return
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let htmlString = String(data: data, encoding: .utf8) else {
+                return .failure(.noData)
             }
-            
-            guard let data = data, let htmlString = String(data: data, encoding: .utf8) else {
-                searchResult = .failure(.noData)
-                return
-            }
-            
-            searchResult = self.parseHtml(htmlString)
+            return self.parseHtml(htmlString)
+        } catch {
+            return .failure(.networkError(error))
         }
-        
-        task.resume()
-        semaphore.wait()
-        
-        return searchResult
     }
-
+    
     private func parseHtml(_ html: String) -> Result<[SearchResult], HowtoError> {
         do {
             let doc: Document = try SwiftSoup.parse(html)
@@ -105,5 +89,3 @@ struct Howto: ParsableCommand {
         }
     }
 }
-
-Howto.main()
