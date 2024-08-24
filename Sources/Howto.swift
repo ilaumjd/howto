@@ -19,12 +19,13 @@ import ArgumentParser
     var query: [String]
     
     mutating func run() async {
-        let searchService = SearchService()
-        let searchResult = await searchService.performSearch(engine: engine, query: query)
+        let config = Config(engine: engine, num: num)
+        let service = HowtoService(config: config)
+        let searchResult = await service.performSearch(query: query)
         
         switch searchResult {
         case .success(let results):
-            for (index, result) in results.prefix(num).enumerated() {
+            for (index, result) in results.prefix(config.num).enumerated() {
                 print("\nResult \(index + 1):")
                 print("Title: \(result.title)")
                 print("Link: \(result.link)")

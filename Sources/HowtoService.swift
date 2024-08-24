@@ -1,20 +1,22 @@
 import Foundation
 import SwiftSoup
 
-struct SearchService {
+struct HowtoService {
     
-    func performSearch(engine: SearchEngine, query: [String]) async -> Result<[SearchResult], HowtoError> {
-        return await getUrl(engine: engine, query: query)
+    let config: Config
+    
+    func performSearch(query: [String]) async -> Result<[SearchResult], HowtoError> {
+        return await getUrl(query: query)
             .asyncFlatMap(search)
-            .flatMap{ parseHtml(engine: engine, htmlString: $0) }
+            .flatMap(parseHtml)
     }
     
-    private func getUrl(engine: SearchEngine, query: [String]) -> Result<URL, HowtoError> {
+    private func getUrl(query: [String]) -> Result<URL, HowtoError> {
         let site = "stackoverflow.com"
         let question = query.joined(separator: "+")
         let urlString: String;
         
-        switch engine {
+        switch config.engine {
         case .bing:
             urlString = "https://www.bing.com/search?q=site:\(site) \(question)"
         default:
@@ -41,8 +43,8 @@ struct SearchService {
         }
     }
     
-    private func parseHtml(engine: SearchEngine, htmlString: String) -> Result<[SearchResult], HowtoError> {
-        switch engine {
+    private func parseHtml(htmlString: String) -> Result<[SearchResult], HowtoError> {
+        switch config.engine {
         case .bing:
             parseHtmlBing(htmlString: htmlString)
         default:

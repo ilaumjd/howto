@@ -17,6 +17,11 @@ enum SearchEngine: String, ExpressibleByArgument {
     }
 }
 
+struct Config {
+    let engine: SearchEngine
+    let num: Int
+}
+
 enum HowtoError: Error {
     case invalidURL
     case networkError(Error)
