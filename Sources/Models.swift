@@ -1,24 +1,7 @@
 import Foundation
-import ArgumentParser
-
-enum SearchEngine: String, ExpressibleByArgument {
-    case google
-    case bing
-
-    init?(argument: String) {
-        switch argument.lowercased() {
-        case "google":
-            self = .google
-        case "bing":
-            self = .bing
-        default:
-            return nil
-        }
-    }
-}
 
 struct Config {
-    let engine: SearchEngine
+    let engine: SearchEngineURL & SearchResultParser
     let num: Int
 }
 

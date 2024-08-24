@@ -1,5 +1,44 @@
 import Foundation
+import ArgumentParser
 import SwiftSoup
+
+enum SearchEngineType: String, ExpressibleByArgument {
+    case google
+    case bing
+
+    init?(argument: String) {
+        switch argument.lowercased() {
+        case "bing":
+            self = .bing
+        default:
+            self = .google
+        }
+    }
+    
+    var engine: SearchEngineURL & SearchResultParser {
+        switch self {
+        case .google:
+            GoogleEngine()
+        case .bing:
+            BingEngine()
+        }
+    }
+}
+
+protocol SearchEngineURL {
+    var searchURL: String { get }
+    func createURL(keyword: String) -> Result<URL, HowtoError>
+}
+
+extension SearchEngineURL {
+    func createURL(keyword: String) -> Result<URL, HowtoError> {
+        let urlString = String(format: searchURL, keyword)
+        if let url = URL(string: urlString) {
+            return .success(url)
+        }
+        return .failure(.invalidURL)
+    }
+}
 
 protocol SearchResultParser {
     var resultSelector: String { get }
@@ -34,14 +73,18 @@ extension SearchResultParser {
     }
 }
 
-struct GoogleParser: SearchResultParser {
+struct GoogleEngine: SearchEngineURL, SearchResultParser {
+    let searchURL: String = "https://www.google.com/search?q=%@&hl=en"
+    
     let resultSelector = "div.g"
     let titleSelector = "h3"
     let linkSelector = "a"
     let snippetSelector = "div.VwiC3b"
 }
 
-struct BingParser: SearchResultParser {
+struct BingEngine: SearchEngineURL, SearchResultParser {
+    let searchURL: String = "https://www.bing.com/search?q=%@"
+    
     let resultSelector = "li.b_algo"
     let titleSelector = "h2"
     let linkSelector = "h2 a"

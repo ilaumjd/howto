@@ -8,26 +8,17 @@ struct HowtoService {
     private let userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
     
     func performSearch(query: [String]) async -> Result<[SearchResult], HowtoError> {
-        return await createUrl(query: query)
+        let keyword = createKeyword(query: query)
+        return await config.engine.createURL(keyword: keyword)
             .asyncFlatMap(search)
-            .flatMap(parseHtml)
+            .flatMap(config.engine.parse)
     }
     
-    private func createUrl(query: [String]) -> Result<URL, HowtoError> {
+    private func createKeyword(query: [String]) -> String {
         let site = "stackoverflow.com"
         let question = query.joined(separator: "+")
-        let urlString: String;
-        
-        switch config.engine {
-        case .google:
-            urlString = "https://www.google.com/search?q=site:\(site) \(question)&hl=en"
-        case .bing:
-            urlString = "https://www.bing.com/search?q=site:\(site) \(question)"
-        }
-        if let url = URL(string: urlString) {
-            return .success(url)
-        }
-        return .failure(.invalidURL)
+        let keyword = "site:\(site) \(question)"
+        return keyword
     }
     
     private func search(url: URL) async -> Result<String, HowtoError> {
@@ -42,16 +33,5 @@ struct HowtoService {
         } catch {
             return .failure(.networkError(error))
         }
-    }
-    
-    private func parseHtml(htmlString: String) -> Result<[SearchResult], HowtoError> {
-        let parser: SearchResultParser
-        switch config.engine {
-        case .google:
-            parser = GoogleParser()
-        case .bing:
-            parser = BingParser()
-        }
-        return parser.parse(htmlString: htmlString)
     }
 }

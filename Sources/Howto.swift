@@ -5,12 +5,12 @@ import ArgumentParser
 
     static let configuration = CommandConfiguration(
         commandName: "howto",
-        abstract: "cli tool to find answers to programming questions using Google Search",
-        version: "1.0.0"
+        abstract: "Find answer for programming questions",
+        version: "0.0.1"
     )
     
     @Option(name: .shortAndLong, help: "Search engine to use (google, bing)")
-    var engine: SearchEngine = .google
+    var engine: SearchEngineType = .google
     
     @Option(name: .shortAndLong, help: "Number of answers to return")
     var num: Int = 1
@@ -19,7 +19,7 @@ import ArgumentParser
     var query: [String]
     
     mutating func run() async {
-        let config = Config(engine: engine, num: num)
+        let config = Config(engine: engine.engine, num: num)
         let service = HowtoService(config: config)
         let searchResult = await service.performSearch(query: query)
         
