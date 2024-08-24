@@ -31,7 +31,7 @@ struct SearchResult {
         let question = query.joined(separator: "+")
         let urlString = "https://www.google.com/search?q=site:\(site) \(question)&hl=en"
         
-        let searchResult = await search(urlString: urlString)
+        let searchResult = await search(urlString: urlString).flatMap(parseHtml)
         
         switch searchResult {
         case .success(let results):
@@ -46,7 +46,7 @@ struct SearchResult {
         }
     }
     
-    private func search(urlString: String) async -> Result<[SearchResult], HowtoError> {
+    private func search(urlString: String) async -> Result<String, HowtoError> {
         guard let url = URL(string: urlString) else {
             return .failure(.invalidURL)
         }
@@ -55,11 +55,11 @@ struct SearchResult {
         request.setValue("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36", forHTTPHeaderField: "User-Agent")
         
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let htmlString = String(data: data, encoding: .utf8) else {
-                return .failure(.noData)
+            let (data, _) = try await URLSession.shared.data(for: request)
+            if let htmlString = String(data: data, encoding: .utf8) {
+                return .success(htmlString)
             }
-            return self.parseHtml(htmlString)
+            return .failure(.noData)
         } catch {
             return .failure(.networkError(error))
         }
