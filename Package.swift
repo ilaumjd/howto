@@ -21,8 +21,7 @@ let package = Package(
         .testTarget(
             name: "howtoTests",
             dependencies: [
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                "SwiftSoup",
+                "howto",
             ]
         )
     ]

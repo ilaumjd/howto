@@ -12,7 +12,7 @@ struct HowtoService {
             .flatMap(config.engine.parse)
     }
     
-    private func createKeyword(query: [String]) -> String {
+    func createKeyword(query: [String]) -> String {
         let keyword = "site:\(config.site) \(query.joined(separator: " "))"
         return keyword
     }
