@@ -13,8 +13,18 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "howto",
-            dependencies: [.product(name: "ArgumentParser", package: "swift-argument-parser"),
-                           "SwiftSoup"])
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                "SwiftSoup",
+            ]
+        ),
+        .testTarget(
+            name: "howtoTests",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                "SwiftSoup",
+            ]
+        )
     ]
 )
 
