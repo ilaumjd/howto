@@ -1,11 +1,5 @@
 import Foundation
 
-struct SearchResult {
-    let title: String
-    let link: String
-    let snippet: String
-}
-
 struct Answer {
     let questionTitle: String
     let tags: [String]

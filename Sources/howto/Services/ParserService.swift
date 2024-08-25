@@ -2,27 +2,23 @@ import Foundation
 import SwiftSoup
 
 struct ParserService {
-    static func parseSearchResults(htmlString: String, engine: SearchEngine) throws -> [SearchResult] {
+    static func parseSearchResultLinks(htmlString: String, engine: SearchEngine) throws -> [String] {
         do {
             let doc: Document = try SwiftSoup.parse(htmlString)
             let results: Elements = try doc.select(engine.resultSelector)
             
-            let searchResults = results.array().compactMap { result -> SearchResult? in
-                guard let title = try? result.select(engine.titleSelector).first()?.text(),
-                      let link = try? result.select(engine.linkSelector).first()?.attr("href"),
-                      let snippet = try? result.select(engine.snippetSelector).first()?.text()
-                else {
+            let links = results.array().compactMap { result -> String? in
+                guard let link = try? result.select(engine.linkSelector).first()?.attr("href") else {
                     return nil
                 }
-                
-                return SearchResult(title: title, link: link, snippet: snippet)
+                return link
             }
             
-            guard !searchResults.isEmpty else {
+            guard !links.isEmpty else {
                 throw ParserError.noResults
             }
             
-            return searchResults
+            return links
         } catch let error as ParserError {
             throw error
         } catch {
