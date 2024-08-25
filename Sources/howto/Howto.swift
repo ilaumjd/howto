@@ -37,12 +37,12 @@ import ArgumentParser
             let batService = BatService()
             
             let htmlPage = try await searchService.performSearch(query: query)
-            let links = try ParserService.parseSearchResultLinks(htmlString: htmlPage, engine: config.engine)
+            let resultURLs = try ParserService.parseSearchResultLinks(htmlString: htmlPage, engine: config.engine)
             
-            for link in links.prefix(config.num) {
-                let url = try searchService.createURL(urlString: link)
+            for resultURL in resultURLs.prefix(config.num) {
+                let url = try searchService.createURL(urlString: resultURL)
                 let soHtmlPage = try await searchService.fetchHtmlPage(url: url)
-                let answer = try ParserService.parseStackOverflowAnswer(htmlString: soHtmlPage)
+                let answer = try ParserService.parseStackOverflowAnswer(url: resultURL, htmlString: soHtmlPage)
                 
                 if bat {
                     try await batService.printUsingBat(answer: answer)

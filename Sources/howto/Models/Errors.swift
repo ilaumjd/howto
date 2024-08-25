@@ -5,12 +5,10 @@ enum ConfigError: Error {
     case invalidNumber
 }
 
-enum BatServiceError: Error {
-    case batNotFound
-    case batLanguagesFileCreationFailed(Error)
-    case batLanguagesFileReadFailed(Error)
-    case languageNotFound
-    case processError(ProcessError)
+enum SearchError: Error {
+    case invalidURL
+    case noData
+    case networkError(Error)
 }
 
 enum ParserError: Error {
@@ -20,14 +18,16 @@ enum ParserError: Error {
     case parsingError(Error)
 }
 
+enum BatServiceError: Error {
+    case batNotFound
+    case batLanguagesFileCreationFailed(Error)
+    case batLanguagesFileReadFailed(Error)
+    case languageNotFound
+    case processError(ProcessError)
+}
+
 enum ProcessError: Error {
     case executionFailed(Error)
     case outputParsingFailed
-}
-
-enum SearchError: Error {
-    case invalidURL
-    case noData
-    case networkError(Error)
 }
 

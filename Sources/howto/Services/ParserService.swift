@@ -26,7 +26,7 @@ struct ParserService {
         }
     }
     
-    static func parseStackOverflowAnswer(htmlString: String) throws -> Answer {
+    static func parseStackOverflowAnswer(url: String, htmlString: String) throws -> Answer {
         let doc: Document = try SwiftSoup.parse(htmlString)
         
         // Parse question title
@@ -45,7 +45,7 @@ struct ParserService {
         }
         
         // Check if it's an accepted answer
-        let hasAcceptedAnswer = answerBlock.hasClass("accepted-answer")
+        let accepted = answerBlock.hasClass("accepted-answer")
         
         // Parse vote count
         let voteCountString = try answerBlock.select("div.js-vote-count").first()?.text() ?? "0"
@@ -74,10 +74,11 @@ struct ParserService {
         
         // Create Answer
         return Answer(
+            url: url,
             questionTitle: questionTitle,
             tags: tags,
+            accepted: accepted,
             voteCount: voteCount,
-            hasAcceptedAnswer: hasAcceptedAnswer,
             codeSnippets: codeSnippets,
             fullAnswer: fullAnswer
         )
