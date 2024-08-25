@@ -33,19 +33,19 @@ import ArgumentParser
     
     private func howto(config: Config, query: [String]) async {
         do {
-            let service = SearchService(config: config)
+            let searchService = SearchService(config: config)
+            let batService = BatService()
             
-            let htmlPage = try await service.performSearch(query: query)
-            let results = try config.engine.parse(htmlString: htmlPage)
+            let htmlPage = try await searchService.performSearch(query: query)
+            let results = try ParserService.parseSearchResults(htmlString: htmlPage, engine: config.engine)
             
             for result in results.prefix(config.num) {
-                let url = try service.createURL(urlString: result.link)
-                let soHtmlPage = try await service.fetchHtmlPage(url: url)
-                let answer = try StackOverflowParser.parse(htmlString: soHtmlPage)
+                let url = try searchService.createURL(urlString: result.link)
+                let soHtmlPage = try await searchService.fetchHtmlPage(url: url)
+                let answer = try ParserService.parseStackOverflowAnswer(htmlString: soHtmlPage)
                 
                 let output = answer.codeSnippets.first ?? ""
                 if bat {
-                    let batService = BatService()
                     await batService.printUsingBat(answer: answer)
                 } else {
                     print(output)

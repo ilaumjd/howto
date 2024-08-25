@@ -12,42 +12,11 @@ protocol SearchResultParser {
     var titleSelector: String { get }
     var linkSelector: String { get }
     var snippetSelector: String { get }
-    func parse(htmlString: String) throws -> [SearchResult]
 }
 
 enum SearchParserError: Error {
     case noResults
     case parsingError(Error)
-}
-
-extension SearchResultParser {
-    func parse(htmlString: String) throws -> [SearchResult] {
-        do {
-            let doc: Document = try SwiftSoup.parse(htmlString)
-            let results: Elements = try doc.select(resultSelector)
-            
-            let searchResults = results.array().compactMap { result -> SearchResult? in
-                guard let title = try? result.select(titleSelector).first()?.text(),
-                      let link = try? result.select(linkSelector).first()?.attr("href"),
-                      let snippet = try? result.select(snippetSelector).first()?.text()
-                else {
-                    return nil
-                }
-                
-                return SearchResult(title: title, link: link, snippet: snippet)
-            }
-            
-            guard !searchResults.isEmpty else {
-                throw SearchParserError.noResults
-            }
-            
-            return searchResults
-        } catch let error as SearchParserError {
-            throw error
-        } catch {
-            throw SearchParserError.parsingError(error)
-        }
-    }
 }
 
 struct GoogleEngine: SearchEngineURL, SearchResultParser {
