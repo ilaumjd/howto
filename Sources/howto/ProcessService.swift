@@ -1,126 +1,90 @@
 import Foundation
 
 struct ProcessService {
+    private let fileManager = FileManager.default
     
-    func printUsingBat(answer: Answer, output: String) {
-        if let batPath = findBatPath() {
-            ensureBatLanguagesFileExists()
-            let language = getOutputLanguageByTags(answer: answer)
-            pipeOutputToBat(language: language, output: output + "\n", batPath: batPath)
-        }
+    func printUsingBat(answer: Answer) {
+        guard case .success(let batPath) = findBatPath() else { return }
+        guard case .success(let batLanguagesPath) = ensureBatLanguagesFileExists(batPath: batPath) else { return }
+        guard case .success(let batLanguages) = readBatLanguages(batLanguagesPath: batLanguagesPath) else { return }
+        guard case .success(let language) = getOutputLanguage(batLanguages: batLanguages, answer: answer) else { return }
+        let text = (answer.codeSnippets.first ?? "") + "\n"
+        pipeToBat(text: text, batPath: batPath, language: language)
     }
     
-    func getOutputLanguageByTags(answer: Answer) -> String {
-        let batLanguages = readBatLanguages()
-        let tags = Set(answer.tags)
-        return batLanguages.first { tags.contains($0) } ?? "bash"
+    func getOutputLanguage(batLanguages: Set<String>, answer: Answer) -> Result<String, Error> {
+        return .success(Set(answer.tags).intersection(batLanguages).first ?? "bash")
     }
     
-    func ensureBatLanguagesFileExists() {
-        let filePath = getBatLanguagesPath()
-        let fileManager = FileManager.default
+    private func ensureBatLanguagesFileExists(batPath: String) -> Result<String, ProcessError> {
+        let batLanguagesPath = fileManager.homeDirectoryForCurrentUser.appendingPathComponent(".config/howto/bat-languages").path
+        guard !fileManager.fileExists(atPath: batLanguagesPath) else { return .success(batLanguagesPath) }
         
-        if !fileManager.fileExists(atPath: filePath) {
-            print("bat-languages file not found. Creating default file at \(filePath)")
-            
-            let defaultContent = getBatLanguagesFiles() ?? ""
-            print("dadsasd", defaultContent)
-            
+        let batLanguagesRawStringResult = runProcessAndReturn(executablePath: batPath, arguments: ["--list-languages"])
+        
+        switch batLanguagesRawStringResult {
+        case .success(let rawString):
             do {
-                try fileManager.createDirectory(atPath: (filePath as NSString).deletingLastPathComponent, withIntermediateDirectories: true, attributes: nil)
-                try defaultContent.write(toFile: filePath, atomically: true, encoding: .utf8)
+                try fileManager.createDirectory(atPath: (batLanguagesPath as NSString).deletingLastPathComponent, withIntermediateDirectories: true, attributes: nil)
+                try rawString.write(toFile: batLanguagesPath, atomically: true, encoding: .utf8)
+                return .success(batLanguagesPath)
             } catch {
-                print("Error creating default bat-languages file: \(error)")
+                return .failure(.batLanguagesError(error))
             }
+        case .failure(let error):
+            return .failure(.batLanguagesError(error))
         }
     }
     
-    func getBatLanguagesFiles() -> String? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: findBatPath()!)
-        process.arguments = ["--list-languages"]
-        
-        let outputPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = FileHandle.standardError
-        
+    private func readBatLanguages(batLanguagesPath: String) -> Result<Set<String>, ProcessError> {
         do {
-            try process.run()
-            process.waitUntilExit()
-            
-            let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-            if let outputString = String(data: outputData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) {
-                return outputString.isEmpty ? nil : outputString
-            }
+            let contents = try String(contentsOfFile: batLanguagesPath, encoding: .utf8)
+            let languages = Set(contents.components(separatedBy: .newlines)
+                .flatMap { line -> [String] in
+                    let parts = line.components(separatedBy: ":")
+                    guard parts.count == 2 else { return [] }
+                    let identifiers = parts[1].split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+                    return [parts[0].trimmingCharacters(in: .whitespacesAndNewlines).lowercased()] + identifiers
+                })
+            return .success(languages)
         } catch {
-            print("Error finding bat path: \(error)")
-        }
-        
-        return nil
-    }
-    
-    func getBatLanguagesPath() -> String {
-        let fileManager = FileManager.default
-        let homeDirectory = fileManager.homeDirectoryForCurrentUser
-        return homeDirectory.appendingPathComponent(".config/howto/bat-languages").path
-    }
-
-    func readBatLanguages() -> [String] {
-        let filePath = getBatLanguagesPath()
-        
-        do {
-            let contents = try String(contentsOfFile: filePath, encoding: .utf8)
-            let lines = contents.components(separatedBy: .newlines)
-            
-            var languageIdentifiers = [String]()
-            for line in lines {
-                let parts = line.components(separatedBy: ":")
-                if parts.count == 2 {
-                    let identifiers = parts[1].split(separator: ",")
-                        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-                    languageIdentifiers.append(contentsOf: identifiers)
-                    
-                    let languageName = parts[0].trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-                    languageIdentifiers.append(languageName)
-                }
-            }
-            
-            return Array(Set(languageIdentifiers)).sorted()
-        } catch {
-            print("Error reading bat-languages file: \(error)")
-            return []
+            return .failure(.batLanguagesError(error))
         }
     }
     
-    
-    func pipeOutputToBat(language: String, output: String, batPath: String) {
+    private func pipeToBat(text: String, batPath: String, language: String) {
+        runProcessWithPipe(input: text, executablePath: batPath, arguments: ["-pp", "-l", language])
+    }
+    private func runProcessWithPipe(input: String, executablePath: String, arguments: [String]) {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: batPath)
-        process.arguments = ["-pp", "-l", language]
-
+        process.executableURL = URL(fileURLWithPath: executablePath)
+        process.arguments = arguments
+        
         let inputPipe = Pipe()
-        
         process.standardInput = inputPipe
         process.standardOutput = FileHandle.standardOutput
         process.standardError = FileHandle.standardError
-
+        
         do {
             try process.run()
-            if let data = output.data(using: .utf8) {
+            if let data = input.data(using: .utf8) {
                 inputPipe.fileHandleForWriting.write(data)
                 inputPipe.fileHandleForWriting.closeFile()
             }
-
             process.waitUntilExit()
         } catch {
             print("Error piping to bat: \(error)")
         }
     }
     
-    func findBatPath() -> String? {
+    private func findBatPath() -> Result<String, ProcessError> {
+        runProcessAndReturn(executablePath: "/bin/sh", arguments: ["-c", "command -v bat"])
+    }
+    
+    private func runProcessAndReturn(executablePath: String, arguments: [String]) -> Result<String, ProcessError> {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/bin/sh")
-        process.arguments = ["-c", "command -v bat"]
+        process.executableURL = URL(fileURLWithPath: executablePath)
+        process.arguments = arguments
         
         let outputPipe = Pipe()
         process.standardOutput = outputPipe
@@ -131,14 +95,10 @@ struct ProcessService {
             process.waitUntilExit()
             
             let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-            if let outputString = String(data: outputData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) {
-                return outputString.isEmpty ? nil : outputString
-            }
+            let outputString = String(data: outputData, encoding: .utf8)!.trimmingCharacters(in: .whitespacesAndNewlines)
+            return .success(outputString)
         } catch {
-            print("Error finding bat path: \(error)")
+            return .failure(.runError(error))
         }
-        
-        return nil
     }
-    
 }

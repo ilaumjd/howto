@@ -16,9 +16,6 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 "SwiftSoup",
-            ],
-            resources: [
-                .copy("bat-languages")
             ]
         ),
         .testTarget(

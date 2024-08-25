@@ -40,7 +40,7 @@ import ArgumentParser
                         let output = answer.codeSnippets.first ?? ""
                         if bat {
                             let processService = ProcessService()
-                            processService.printUsingBat(answer: answer, output: output)
+                            processService.printUsingBat(answer: answer)
                         } else {
                             print(output)
                         }
