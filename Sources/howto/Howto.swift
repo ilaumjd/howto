@@ -15,11 +15,11 @@ import ArgumentParser
     @Option(name: .shortAndLong, help: "Number of answers to return")
     var num: Int = 1
     
-    @Argument(help: "The programming question you want to ask")
-    var query: [String]
-    
     @Flag(name: .shortAndLong, help: "Pipe output to bat for syntax highlighting")
     var bat: Bool = false
+    
+    @Argument(help: "The programming question you want to ask")
+    var query: [String]
     
     mutating func run() async {
         let configResult = Config.new(engineType: engineType, num: num)
@@ -39,8 +39,8 @@ import ArgumentParser
                     case let .success(answer):
                         let output = answer.codeSnippets.first ?? ""
                         if bat {
-                            let processService = ProcessService()
-                            processService.printUsingBat(answer: answer)
+                            let batService = BatService()
+                            batService.printUsingBat(answer: answer)
                         } else {
                             print(output)
                         }
