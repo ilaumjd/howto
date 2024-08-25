@@ -14,7 +14,7 @@ class SearchServiceTests: XCTestCase {
         mockEngine = MockSearchEngine()
         mockConfig = Config(engine: mockEngine, num: 5)
         mockSession = MockURLSession()
-        mockURL = URL(string: "https://example.com")
+        mockURL = URL(string: "https://test.com/search?q=%@")
         service = SearchService(config: mockConfig, session: mockSession)
     }
     
@@ -34,9 +34,9 @@ class SearchServiceTests: XCTestCase {
     }
     
     func testCreateURLSuccess() {
-        let keyword = "swift testing"
+        let urlString = "https://test.com/search?q=swift%20testing"
         
-        let result = service.createURL(keyword: keyword)
+        let result = service.createURL(urlString: urlString)
         
         switch result {
         case .success(let url):

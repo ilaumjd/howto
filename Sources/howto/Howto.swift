@@ -29,8 +29,9 @@ import ArgumentParser
             switch searchResult {
             case let .success(results):
                 for result in results.prefix(config.num) {
-                    let url = URL(string: result.link)!
-                    let soResult = await service.fetchHtmlPage(url: url).flatMap(StackOverflowParser.parse)
+                    let soResult = await service.createURL(urlString: result.link)
+                        .asyncFlatMap(service.fetchHtmlPage)
+                        .flatMap(StackOverflowParser.parse)
                     if case let .success(answer) = soResult {
                         print("\(answer.codeSnippets.first ?? "")")
                     }

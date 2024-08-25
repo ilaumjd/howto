@@ -13,7 +13,8 @@ struct SearchService {
     
     func performSearch(query: [String]) async -> Result<String, HowtoError> {
         let keyword = createKeyword(query: query)
-        return await createURL(keyword: keyword)
+        let urlString = createSearchURL(keyword: keyword)
+        return await createURL(urlString: urlString)
             .asyncFlatMap(fetchHtmlPage)
     }
     
@@ -21,11 +22,11 @@ struct SearchService {
         "site:\(config.site) \(query.joined(separator: " "))"
     }
     
-    func createURL(keyword: String) -> Result<URL, HowtoError> {
-        guard let encodedKeyword = keyword.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            return .failure(.invalidURL)
-        }
-        let urlString = String(format: config.engine.baseURL, encodedKeyword)
+    func createSearchURL(keyword: String) -> String {
+        String(format: config.engine.baseURL, keyword)
+    }
+    
+    func createURL(urlString: String) -> Result<URL, HowtoError> {
         guard let url = URL(string: urlString) else {
             return .failure(.invalidURL)
         }
