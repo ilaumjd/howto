@@ -28,10 +28,11 @@ import ArgumentParser
             switch configResult {
             case let .success(config):
                 let service = SearchService(config: config)
-                let searchResult = await service.performSearch(query: query).flatMap(config.engine.parse)
+                let htmlPageResult = await service.performSearch(query: query)
                 
-                switch searchResult {
-                case let .success(results):
+                switch htmlPageResult {
+                case let .success(htmlPage):
+                    let results = try config.engine.parse(htmlString: htmlPage)
                     for result in results.prefix(config.num) {
                         let soHtmlPageResult = await service.createURL(urlString: result.link)
                             .asyncFlatMap(service.fetchHtmlPage)

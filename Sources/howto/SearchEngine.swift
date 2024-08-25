@@ -12,12 +12,16 @@ protocol SearchResultParser {
     var titleSelector: String { get }
     var linkSelector: String { get }
     var snippetSelector: String { get }
+    func parse(htmlString: String) throws -> [SearchResult]
+}
 
-    func parse(htmlString: String) -> Result<[SearchResult], HowtoError>
+enum SearchParserError: Error {
+    case noResults
+    case parsingError(Error)
 }
 
 extension SearchResultParser {
-    func parse(htmlString: String) -> Result<[SearchResult], HowtoError> {
+    func parse(htmlString: String) throws -> [SearchResult] {
         do {
             let doc: Document = try SwiftSoup.parse(htmlString)
             let results: Elements = try doc.select(resultSelector)
@@ -33,13 +37,15 @@ extension SearchResultParser {
                 return SearchResult(title: title, link: link, snippet: snippet)
             }
             
-            guard !results.isEmpty else {
-                return .failure(.noData)
+            guard !searchResults.isEmpty else {
+                throw SearchParserError.noResults
             }
             
-            return .success(searchResults)
+            return searchResults
+        } catch let error as SearchParserError {
+            throw error
         } catch {
-            return .failure(.parsingError(error))
+            throw SearchParserError.parsingError(error)
         }
     }
 }
