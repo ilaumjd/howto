@@ -47,6 +47,10 @@ extension SearchResultParser {
                 return SearchResult(title: title, link: link, snippet: snippet)
             }
             
+            guard !results.isEmpty else {
+                return .failure(.noData)
+            }
+            
             return .success(searchResults)
         } catch {
             return .failure(.parsingError(error))
