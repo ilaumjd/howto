@@ -34,7 +34,6 @@ import ArgumentParser
     private func howto(config: Config, query: [String]) async {
         do {
             let searchService = SearchService(config: config)
-            let batService = BatService()
             
             let htmlPage = try await searchService.performSearch(query: query)
             let resultURLs = try ParserService.parseSearchResultLinks(htmlString: htmlPage, engine: config.engine)
@@ -44,11 +43,8 @@ import ArgumentParser
                 let soHtmlPage = try await searchService.fetchHtmlPage(url: url)
                 let answer = try ParserService.parseStackOverflowAnswer(url: resultURL, htmlString: soHtmlPage)
                 
-                if config.useBat {
-                    try await batService.printUsingBat(answer: answer)
-                } else {
-                    print(answer.codeSnippets.first ?? "")
-                }
+                let outputService = OutputService(config: config)
+                try await outputService.output(answer: answer)
             }
         }
         catch {
