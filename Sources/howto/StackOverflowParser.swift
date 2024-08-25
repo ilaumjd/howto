@@ -3,6 +3,7 @@ import SwiftSoup
 
 struct Answer {
     let questionTitle: String
+    let tags: [String]
     let voteCount: Int
     let hasAcceptedAnswer: Bool
     let codeSnippets: [String]
@@ -17,13 +18,16 @@ struct StackOverflowParser {
             // Parse question title
             let questionTitle = try doc.select("h1[itemprop=name] a.question-hyperlink").first()?.text() ?? ""
             
+            // Parse tags
+            let tags = try doc.select(".post-tag").map { try $0.text() }
+            
             // Find the accepted answer or the highest voted answer
             let answerBlock = try doc.select("div.answer").first { element in
                 try element.hasClass("accepted-answer") || element.select("div.js-vote-count").first()?.text() != "0"
             } ?? doc.select("div.answer").first()
             
             guard let answerBlock = answerBlock else {
-                return .failure(.noData)
+                return .failure(.noAnswer)
             }
             
             // Check if it's an accepted answer
@@ -34,11 +38,13 @@ struct StackOverflowParser {
             let voteCount = Int(voteCountString) ?? 0
             
             // Parse answer body
-            guard let answerBody = try answerBlock.select("div.js-post-body").first() ?? answerBlock.select("div.post-text").first() else {
-                return .failure(.parsingError(NSError(domain: "StackOverflowParser", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not find answer body"])))
+            let answerBody = try answerBlock.select("div.js-post-body").first() ?? answerBlock.select("div.post-text").first()
+            
+            guard let answerBody = answerBody else {
+                return .failure(.noAnswer)
             }
             
-            // Extract code snippets
+            // Parse code snippets
             let preCodeBlocks = try answerBody.select("pre code")
             let codeSnippets: [String]
             if preCodeBlocks.isEmpty() {
@@ -49,12 +55,13 @@ struct StackOverflowParser {
                 codeSnippets = try preCodeBlocks.map { try $0.htmlDecoded() }
             }
             
-            // Get full answer text
+            // Parse full answer text
             let fullAnswer = try answerBody.htmlDecoded()
             
             // Create Answer
             let answer = Answer(
                 questionTitle: questionTitle,
+                tags: tags,
                 voteCount: voteCount,
                 hasAcceptedAnswer: hasAcceptedAnswer,
                 codeSnippets: codeSnippets,

@@ -32,8 +32,11 @@ import ArgumentParser
                     let soResult = await service.createURL(urlString: result.link)
                         .asyncFlatMap(service.fetchHtmlPage)
                         .flatMap(StackOverflowParser.parse)
-                    if case let .success(answer) = soResult {
+                    switch soResult {
+                    case let .success(answer):
                         print("\(answer.codeSnippets.first ?? "")")
+                    case let .failure(error):
+                        print("Error: \(error)")
                     }
                 }
             case let .failure(error):

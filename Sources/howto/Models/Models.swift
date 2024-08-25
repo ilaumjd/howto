@@ -10,6 +10,7 @@ enum HowtoError: Error {
     case networkError(Error)
     case noData
     case parsingError(Error)
+    case noAnswer
 }
 
 struct SearchResult {
