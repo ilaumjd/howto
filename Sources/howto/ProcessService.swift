@@ -1,8 +1,17 @@
 import Foundation
 
-struct ProcessService {
-    
-    static func runProcessAndReturnOutput(executablePath: String, arguments: [String]) -> Result<String, ProcessError> {
+protocol ProcessServiceProtocol {
+    func runProcessAndReturnOutput(executablePath: String, arguments: [String]) async throws -> String
+    func runProcessWithPipe(input: String, executablePath: String, arguments: [String]) async throws
+}
+
+enum ProcessError: Error {
+    case executionFailed(Error)
+    case outputParsingFailed
+}
+
+struct ProcessService: ProcessServiceProtocol {
+    func runProcessAndReturnOutput(executablePath: String, arguments: [String]) async throws -> String {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: executablePath)
         process.arguments = arguments
@@ -16,14 +25,16 @@ struct ProcessService {
             process.waitUntilExit()
             
             let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-            let outputString = String(data: outputData, encoding: .utf8)!.trimmingCharacters(in: .whitespacesAndNewlines)
-            return .success(outputString)
+            guard let outputString = String(data: outputData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+                throw ProcessError.outputParsingFailed
+            }
+            return outputString
         } catch {
-            return .failure(.runError(error))
+            throw ProcessError.executionFailed(error)
         }
     }
     
-    static func runProcessWithPipe(input: String, executablePath: String, arguments: [String]) {
+    func runProcessWithPipe(input: String, executablePath: String, arguments: [String]) async throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: executablePath)
         process.arguments = arguments
@@ -37,11 +48,11 @@ struct ProcessService {
             try process.run()
             if let data = input.data(using: .utf8) {
                 inputPipe.fileHandleForWriting.write(data)
-                inputPipe.fileHandleForWriting.closeFile()
+                try inputPipe.fileHandleForWriting.close()
             }
             process.waitUntilExit()
         } catch {
-            print("Error piping to \(executablePath): \(error)")
+            throw ProcessError.executionFailed(error)
         }
     }
 }

@@ -13,11 +13,6 @@ enum HowtoError: Error {
     case noAnswer
 }
 
-enum ProcessError: Error {
-    case runError(Error)
-    case batLanguagesError(Error)
-}
-
 struct SearchResult {
     let title: String
     let link: String
