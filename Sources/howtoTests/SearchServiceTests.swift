@@ -46,42 +46,42 @@ class SearchServiceTests: XCTestCase {
         }
     }
     
-    func testSearchSuccess() async {
+    func testFetchHtmlPageSuccess() async {
         let expectedHTML = "<html><body>Test</body></html>"
         mockSession.data = expectedHTML.data(using: .utf8)
         
-        let result = await service.search(url: mockURL)
+        let result = await service.fetchHtmlPage(url: mockURL)
         
         switch result {
         case .success(let html):
             XCTAssertEqual(html, expectedHTML)
         case .failure:
-            XCTFail("Search should not fail")
+            XCTFail("FetchHtmlPage should not fail")
         }
     }
     
-    func testSearchNoData() async {
+    func testFetchHtmlPageNoData() async {
         mockSession.data = nil
         
-        let result = await service.search(url: mockURL)
+        let result = await service.fetchHtmlPage(url: mockURL)
         
         switch result {
         case .success:
-            XCTFail("Search should fail with no data")
+            XCTFail("FetchHtmlPage should fail with no data")
         case .failure(let error):
             XCTAssertEqual(error.localizedDescription, HowtoError.noData.localizedDescription)
         }
     }
     
-    func testSearchNetworkError() async {
+    func testFetchHtmlPageNetworkError() async {
         struct TestError: Error {}
         mockSession.error = TestError()
         
-        let result = await service.search(url: mockURL)
+        let result = await service.fetchHtmlPage(url: mockURL)
         
         switch result {
         case .success:
-            XCTFail("Search should fail with network error")
+            XCTFail("FetchHtmlPage should fail with network error")
         case .failure(let error):
             if case .networkError = error {
                 XCTAssertEqual(error.localizedDescription, HowtoError.networkError(mockSession.error!).localizedDescription)

@@ -14,7 +14,7 @@ struct SearchService {
     func performSearch(query: [String]) async -> Result<String, HowtoError> {
         let keyword = createKeyword(query: query)
         return await createURL(keyword: keyword)
-            .asyncFlatMap(search)
+            .asyncFlatMap(fetchHtmlPage)
     }
     
     func createKeyword(query: [String]) -> String {
@@ -32,7 +32,7 @@ struct SearchService {
         return .success(url)
     }
     
-    func search(url: URL) async -> Result<String, HowtoError> {
+    func fetchHtmlPage(url: URL) async -> Result<String, HowtoError> {
         var request = URLRequest(url: url)
         request.setValue(config.userAgent, forHTTPHeaderField: "User-Agent")
         do {
