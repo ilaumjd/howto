@@ -2,7 +2,6 @@ import Foundation
 import SwiftSoup
 
 struct SearchService {
-    
     let config: Config
     let session: URLSessionProtocol
     
@@ -11,11 +10,11 @@ struct SearchService {
         self.session = session
     }
     
-    func performSearch(query: [String]) async -> Result<String, HowtoError> {
+    func performSearch(query: [String]) async throws -> String {
         let keyword = createKeyword(query: query)
         let urlString = createSearchURL(keyword: keyword)
-        return await createURL(urlString: urlString)
-            .asyncFlatMap(fetchHtmlPage)
+        let url = try createURL(urlString: urlString)
+        return try await fetchHtmlPage(url: url)
     }
     
     func createKeyword(query: [String]) -> String {
@@ -26,24 +25,26 @@ struct SearchService {
         String(format: config.engine.baseURL, keyword)
     }
     
-    func createURL(urlString: String) -> Result<URL, HowtoError> {
+    func createURL(urlString: String) throws -> URL {
         guard let url = URL(string: urlString) else {
-            return .failure(.invalidURL)
+            throw HowtoError.invalidURL
         }
-        return .success(url)
+        return url
     }
     
-    func fetchHtmlPage(url: URL) async -> Result<String, HowtoError> {
+    func fetchHtmlPage(url: URL) async throws -> String {
         var request = URLRequest(url: url)
         request.setValue(config.userAgent, forHTTPHeaderField: "User-Agent")
         do {
             let (data, _) = try await session.data(for: request)
             guard let htmlString = String(data: data, encoding: .utf8), !htmlString.isEmpty else {
-                return .failure(.noData)
+                throw HowtoError.noData
             }
-            return .success(htmlString)
+            return htmlString
+        } catch let error as HowtoError {
+            throw error
         } catch {
-            return .failure(.networkError(error))
+            throw HowtoError.networkError(error)
         }
     }
 }
