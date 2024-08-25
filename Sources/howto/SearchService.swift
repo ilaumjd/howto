@@ -36,7 +36,6 @@ struct SearchService {
         var request = URLRequest(url: url)
         request.setValue(config.userAgent, forHTTPHeaderField: "User-Agent")
         do {
-            print("log", request)
             let (data, _) = try await session.data(for: request)
             guard let htmlString = String(data: data, encoding: .utf8), !htmlString.isEmpty else {
                 return .failure(.noData)

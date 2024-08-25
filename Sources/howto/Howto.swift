@@ -28,11 +28,12 @@ import ArgumentParser
             
             switch searchResult {
             case let .success(results):
-                for (index, result) in results.prefix(config.num).enumerated() {
-                    print("\nResult \(index + 1):")
-                    print("Title: \(result.title)")
-                    print("Link: \(result.link)")
-                    print("Snippet: \(result.snippet)")
+                for result in results.prefix(config.num) {
+                    let url = URL(string: result.link)!
+                    let soResult = await service.fetchHtmlPage(url: url).flatMap(StackOverflowParser.parse)
+                    if case let .success(answer) = soResult {
+                        print("\(answer.codeSnippets.first ?? "")")
+                    }
                 }
             case let .failure(error):
                 print("Error: \(error)")
