@@ -1,7 +1,7 @@
 import XCTest
 @testable import howto
 
-class HowtoServiceTests: XCTestCase {
+class SearchServiceTests: XCTestCase {
     
     var mockConfig: Config!
     var mockEngine: MockSearchEngine!
@@ -31,6 +31,19 @@ class HowtoServiceTests: XCTestCase {
         let query = ["swift", "testing"]
         let keyword = service.createKeyword(query: query)
         XCTAssertEqual(keyword, "site:stackoverflow.com swift testing")
+    }
+    
+    func testCreateURLSuccess() {
+        let keyword = "swift testing"
+        
+        let result = service.createURL(keyword: keyword)
+        
+        switch result {
+        case .success(let url):
+            XCTAssertEqual("https://test.com/search?q=swift%20testing", url.absoluteString)
+        case .failure:
+            XCTFail("Create url should not fail")
+        }
     }
     
     func testSearchSuccess() async {
