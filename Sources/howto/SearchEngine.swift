@@ -1,29 +1,7 @@
 import Foundation
-import ArgumentParser
 import SwiftSoup
 
-enum SearchEngineType: String, ExpressibleByArgument {
-    case google
-    case bing
-
-    init?(argument: String) {
-        switch argument.lowercased() {
-        case "bing":
-            self = .bing
-        default:
-            self = .google
-        }
-    }
-    
-    var engine: SearchEngineURL & SearchResultParser {
-        switch self {
-        case .google:
-            GoogleEngine()
-        case .bing:
-            BingEngine()
-        }
-    }
-}
+typealias SearchEngine = SearchEngineURL & SearchResultParser
 
 protocol SearchEngineURL {
     var searchURL: String { get }

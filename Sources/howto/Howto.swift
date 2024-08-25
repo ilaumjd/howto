@@ -10,7 +10,7 @@ import ArgumentParser
     )
     
     @Option(name: .shortAndLong, help: "Search engine to use (google, bing)")
-    var engine: SearchEngineType = .google
+    var engine: String = "google"
     
     @Option(name: .shortAndLong, help: "Number of answers to return")
     var num: Int = 1
@@ -19,21 +19,28 @@ import ArgumentParser
     var query: [String]
     
     mutating func run() async {
-        let config = Config(engine: engine.engine, num: num)
-        let service = HowtoService(config: config)
-        let searchResult = await service.performSearch(query: query)
+        let configResult = Config.create(engineType: engine, num: num)
         
-        switch searchResult {
-        case .success(let results):
-            for (index, result) in results.prefix(config.num).enumerated() {
-                print("\nResult \(index + 1):")
-                print("Title: \(result.title)")
-                print("Link: \(result.link)")
-                print("Snippet: \(result.snippet)")
+        switch configResult {
+        case let .success(config):
+            let service = HowtoService(config: config)
+            let searchResult = await service.performSearch(query: query)
+            
+            switch searchResult {
+            case .success(let results):
+                for (index, result) in results.prefix(config.num).enumerated() {
+                    print("\nResult \(index + 1):")
+                    print("Title: \(result.title)")
+                    print("Link: \(result.link)")
+                    print("Snippet: \(result.snippet)")
+                }
+            case .failure(let error):
+                print("Error: \(error)")
             }
-        case .failure(let error):
-            print("Error: \(error)")
+        case let .failure(error):
+            print("Config error: \(error)")
         }
+
     }
     
 }
