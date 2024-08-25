@@ -27,7 +27,7 @@ struct SearchService {
     
     func createURL(urlString: String) throws -> URL {
         guard let url = URL(string: urlString) else {
-            throw HowtoError.invalidURL
+            throw SearchError.invalidURL
         }
         return url
     }
@@ -38,13 +38,13 @@ struct SearchService {
         do {
             let (data, _) = try await session.data(for: request)
             guard let htmlString = String(data: data, encoding: .utf8), !htmlString.isEmpty else {
-                throw HowtoError.noData
+                throw SearchError.noData
             }
             return htmlString
-        } catch let error as HowtoError {
+        } catch let error as SearchError {
             throw error
         } catch {
-            throw HowtoError.networkError(error)
+            throw SearchError.networkError(error)
         }
     }
 }

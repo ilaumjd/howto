@@ -1,13 +1,6 @@
 import Foundation
 import SwiftSoup
 
-enum ParserError: Error {
-    case noResults
-    case noAnswer
-    case noAnswerBody
-    case parsingError(Error)
-}
-
 struct ParserService {
     static func parseSearchResults(htmlString: String, engine: SearchEngine) throws -> [SearchResult] {
         do {

@@ -1,13 +1,5 @@
 import Foundation
 
-enum BatServiceError: Error {
-    case batNotFound
-    case batLanguagesFileCreationFailed(Error)
-    case batLanguagesFileReadFailed(Error)
-    case languageNotFound
-    case processError(ProcessError)
-}
-
 struct BatService {
     private let fileManager: FileManager
     private let processService: ProcessServiceProtocol

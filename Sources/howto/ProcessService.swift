@@ -5,11 +5,6 @@ protocol ProcessServiceProtocol {
     func runProcessWithPipe(input: String, executablePath: String, arguments: [String]) async throws
 }
 
-enum ProcessError: Error {
-    case executionFailed(Error)
-    case outputParsingFailed
-}
-
 struct ProcessService: ProcessServiceProtocol {
     func runProcessAndReturnOutput(executablePath: String, arguments: [String]) async throws -> String {
         let process = Process()
