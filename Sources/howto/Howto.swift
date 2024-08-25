@@ -19,26 +19,22 @@ import ArgumentParser
     var query: [String]
     
     mutating func run() async {
-        let configResult = Config.create(engineType: engineType, num: num)
+        let configResult = Config.new(engineType: engineType, num: num)
         
         switch configResult {
         case let .success(config):
-            let engine = config.engine
-            let service = SearchService()
-            let keyword = "site:\(config.site) \(query.joined(separator: " "))"
-            let searchResult = await engine.createURL(keyword: keyword)
-                .asyncFlatMap(service.search)
-                .flatMap(config.engine.parse)
+            let service = SearchService(config: config)
+            let searchResult = await service.performSearch(query: query).flatMap(config.engine.parse)
             
             switch searchResult {
-            case .success(let results):
+            case let .success(results):
                 for (index, result) in results.prefix(config.num).enumerated() {
                     print("\nResult \(index + 1):")
                     print("Title: \(result.title)")
                     print("Link: \(result.link)")
                     print("Snippet: \(result.snippet)")
                 }
-            case .failure(let error):
+            case let .failure(error):
                 print("Error: \(error)")
             }
         case let .failure(error):

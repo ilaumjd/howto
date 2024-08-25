@@ -3,17 +3,40 @@ import SwiftSoup
 
 struct SearchService {
     
+    let config: Config
     let session: URLSessionProtocol
-    let userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
     
-    init(session: URLSessionProtocol = URLSession.shared) {
+    init(config: Config, session: URLSessionProtocol = URLSession.shared) {
+        self.config = config
         self.session = session
+    }
+    
+    func performSearch(query: [String]) async -> Result<String, HowtoError> {
+        let keyword = createKeyword(query: query)
+        return await createURL(keyword: keyword)
+            .asyncFlatMap(search)
+    }
+    
+    func createKeyword(query: [String]) -> String {
+        "site:\(config.site) \(query.joined(separator: " "))"
+    }
+    
+    func createURL(keyword: String) -> Result<URL, HowtoError> {
+        guard let encodedKeyword = keyword.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            return .failure(.invalidURL)
+        }
+        let urlString = String(format: config.engine.baseURL, encodedKeyword)
+        guard let url = URL(string: urlString) else {
+            return .failure(.invalidURL)
+        }
+        return .success(url)
     }
     
     func search(url: URL) async -> Result<String, HowtoError> {
         var request = URLRequest(url: url)
-        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        request.setValue(config.userAgent, forHTTPHeaderField: "User-Agent")
         do {
+            print("log", request)
             let (data, _) = try await session.data(for: request)
             guard let htmlString = String(data: data, encoding: .utf8), !htmlString.isEmpty else {
                 return .failure(.noData)

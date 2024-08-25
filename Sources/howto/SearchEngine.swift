@@ -4,21 +4,7 @@ import SwiftSoup
 typealias SearchEngine = SearchEngineURL & SearchResultParser
 
 protocol SearchEngineURL {
-    var searchURL: String { get }
-    func createURL(keyword: String) -> Result<URL, HowtoError>
-}
-
-extension SearchEngineURL {
-    func createURL(keyword: String) -> Result<URL, HowtoError> {
-        guard let encodedKeyword = keyword.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            return .failure(.invalidURL)
-        }
-        let urlString = String(format: searchURL, encodedKeyword)
-        guard let url = URL(string: urlString) else {
-            return .failure(.invalidURL)
-        }
-        return .success(url)
-    }
+    var baseURL: String { get }
 }
 
 protocol SearchResultParser {
@@ -59,7 +45,7 @@ extension SearchResultParser {
 }
 
 struct GoogleEngine: SearchEngineURL, SearchResultParser {
-    let searchURL: String = "https://www.google.com/search?q=%@&hl=en"
+    let baseURL: String = "https://www.google.com/search?q=%@&hl=en"
     
     let resultSelector = "div.g"
     let titleSelector = "h3"
@@ -68,7 +54,7 @@ struct GoogleEngine: SearchEngineURL, SearchResultParser {
 }
 
 struct BingEngine: SearchEngineURL, SearchResultParser {
-    let searchURL: String = "https://www.bing.com/search?q=%@"
+    let baseURL: String = "https://www.bing.com/search?q=%@"
     
     let resultSelector = "li.b_algo"
     let titleSelector = "h2"
