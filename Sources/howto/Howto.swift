@@ -22,40 +22,44 @@ import ArgumentParser
     var query: [String]
     
     mutating func run() async {
-        let configResult = Config.new(engineType: engineType, num: num)
-        
-        switch configResult {
-        case let .success(config):
-            let service = SearchService(config: config)
-            let searchResult = await service.performSearch(query: query).flatMap(config.engine.parse)
+        do {
+            let configResult = Config.new(engineType: engineType, num: num)
             
-            switch searchResult {
-            case let .success(results):
-                for result in results.prefix(config.num) {
-                    let soResult = await service.createURL(urlString: result.link)
-                        .asyncFlatMap(service.fetchHtmlPage)
-                        .flatMap(StackOverflowParser.parse)
-                    switch soResult {
-                    case let .success(answer):
-                        let output = answer.codeSnippets.first ?? ""
-                        if bat {
-                            let batService = BatService()
-                            await batService.printUsingBat(answer: answer)
-                        } else {
-                            print(output)
+            switch configResult {
+            case let .success(config):
+                let service = SearchService(config: config)
+                let searchResult = await service.performSearch(query: query).flatMap(config.engine.parse)
+                
+                switch searchResult {
+                case let .success(results):
+                    for result in results.prefix(config.num) {
+                        let soHtmlPageResult = await service.createURL(urlString: result.link)
+                            .asyncFlatMap(service.fetchHtmlPage)
+                        switch soHtmlPageResult {
+                        case let .success(soHtmlPage):
+                            let answer = try StackOverflowParser.parse(htmlString: soHtmlPage)
+                            let output = answer.codeSnippets.first ?? ""
+                            if bat {
+                                let batService = BatService()
+                                await batService.printUsingBat(answer: answer)
+                            } else {
+                                print(output)
+                            }
+                        case let .failure(error):
+                            print("Error: \(error)")
                         }
-                    case let .failure(error):
-                        print("Error: \(error)")
                     }
+                case let .failure(error):
+                    print("Error: \(error)")
                 }
             case let .failure(error):
-                print("Error: \(error)")
+                print("Config error: \(error)")
             }
-        case let .failure(error):
-            print("Config error: \(error)")
         }
-        
+        catch {
+            print(error)
+        }
     }
-
+    
     
 }
