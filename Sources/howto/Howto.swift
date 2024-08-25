@@ -22,7 +22,7 @@ import ArgumentParser
     var query: [String]
     
     mutating func run() async {
-        let configResult = Config.new(engineType: engineType, num: num)
+        let configResult = Config.new(engineType: engineType, num: num, useBat: bat)
         switch configResult {
         case let .success(config):
             await howto(config: config, query: query)
@@ -44,7 +44,7 @@ import ArgumentParser
                 let soHtmlPage = try await searchService.fetchHtmlPage(url: url)
                 let answer = try ParserService.parseStackOverflowAnswer(url: resultURL, htmlString: soHtmlPage)
                 
-                if bat {
+                if config.useBat {
                     try await batService.printUsingBat(answer: answer)
                 } else {
                     print(answer.codeSnippets.first ?? "")

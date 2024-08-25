@@ -6,8 +6,9 @@ struct Config {
 
     let engine: SearchEngine
     let num: Int
+    let useBat: Bool
     
-    static func new(engineType: String, num: Int) -> Result<Config, ConfigError> {
+    static func new(engineType: String, num: Int, useBat: Bool) -> Result<Config, ConfigError> {
         let engine: SearchEngine
         switch engineType.lowercased() {
         case "google":
@@ -22,7 +23,7 @@ struct Config {
             return .failure(.invalidNumber)
         }
         
-        let config = Config(engine: engine, num: num)
+        let config = Config(engine: engine, num: num, useBat: useBat)
         return .success(config)
     }
 }
