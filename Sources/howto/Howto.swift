@@ -44,11 +44,10 @@ import ArgumentParser
                 let soHtmlPage = try await searchService.fetchHtmlPage(url: url)
                 let answer = try ParserService.parseStackOverflowAnswer(htmlString: soHtmlPage)
                 
-                let output = answer.codeSnippets.first ?? ""
                 if bat {
-                    await batService.printUsingBat(answer: answer)
+                    try await batService.printUsingBat(answer: answer)
                 } else {
-                    print(output)
+                    print(answer.codeSnippets.first ?? "")
                 }
             }
         }

@@ -9,17 +9,13 @@ struct BatService {
         self.processService = processService
     }
     
-    func printUsingBat(answer: Answer) async {
-        do {
-            let batPath = try await getBatExecutablePath()
-            let batLanguagesPath = try await createBatLanguagesFileIfNeeded(batPath: batPath)
-            let batLanguages = try readBatLanguages(batLanguagesPath: batLanguagesPath)
-            let language = try getOutputLanguage(batLanguages: batLanguages, answer: answer)
-            let text = (answer.codeSnippets.first ?? "") + "\n"
-            try await pipeToBat(input: text, batPath: batPath, language: language)
-        } catch {
-            print(error)
-        }
+    func printUsingBat(answer: Answer) async throws {
+        let batPath = try await getBatExecutablePath()
+        let batLanguagesPath = try await createBatLanguagesFileIfNeeded(batPath: batPath)
+        let batLanguages = try readBatLanguages(batLanguagesPath: batLanguagesPath)
+        let language = try getOutputLanguage(batLanguages: batLanguages, answer: answer)
+        let text = (answer.codeSnippets.first ?? "") + "\n"
+        try await pipeToBat(input: text, batPath: batPath, language: language)
     }
     
     private func createBatLanguagesFileIfNeeded(batPath: String) async throws -> String {
