@@ -18,6 +18,9 @@ import ArgumentParser
     @Argument(help: "The programming question you want to ask")
     var query: [String]
     
+    @Flag(name: .shortAndLong, help: "Pipe output to bat for syntax highlighting")
+    var bat: Bool = false
+    
     mutating func run() async {
         let configResult = Config.new(engineType: engineType, num: num)
         
@@ -34,7 +37,13 @@ import ArgumentParser
                         .flatMap(StackOverflowParser.parse)
                     switch soResult {
                     case let .success(answer):
-                        print("\(answer.codeSnippets.first ?? "")")
+                        let output = answer.codeSnippets.first ?? ""
+                        if bat {
+                            let processService = ProcessService()
+                            processService.printUsingBat(output: output)
+                        } else {
+                            print(output)
+                        }
                     case let .failure(error):
                         print("Error: \(error)")
                     }
@@ -47,5 +56,6 @@ import ArgumentParser
         }
         
     }
+
     
 }
