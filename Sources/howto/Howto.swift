@@ -24,9 +24,9 @@ import Foundation
   mutating func run() async {
     let configResult = Config.new(engineType: engineType, num: num, useBat: bat)
     switch configResult {
-    case let .success(config):
+    case .success(let config):
       await howto(config: config, query: query)
-    case let .failure(error):
+    case .failure(let error):
       print("Config error: \(error)")
     }
   }
