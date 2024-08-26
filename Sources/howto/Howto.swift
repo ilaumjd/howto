@@ -34,17 +34,17 @@ import ArgumentParser
     private func howto(config: Config, query: [String]) async {
         do {
             let searchService = SearchService(config: config)
+            let parserService = ParserService(config: config)
             
-            let htmlPage = try await searchService.performSearch(query: query)
-            let resultURLs = try ParserService.parseSearchResultLinks(htmlString: htmlPage, engine: config.engine)
+            let resultHtmlString = try await searchService.performSearch(query: query)
+            let answerURLs = try parserService.parseSearchResultLinks(htmlString: resultHtmlString)
             
-            for resultURL in resultURLs.prefix(config.num) {
-                let url = try searchService.createURL(urlString: resultURL)
-                let soHtmlPage = try await searchService.fetchHtmlPage(url: url)
-                let answer = try ParserService.parseStackOverflowAnswer(url: resultURL, htmlString: soHtmlPage)
+            for answerURL in answerURLs.prefix(config.num) {
+                let answerHtmlString = try await searchService.fetchHtmlPage(urlString: answerURL)
+                let answer = try parserService.parseStackOverflowAnswer(url: answerURL, htmlString: answerHtmlString)
                 
                 let outputService = OutputService(config: config)
-                try await outputService.output(answer: answer)
+                await outputService.output(answer: answer)
             }
         }
         catch {

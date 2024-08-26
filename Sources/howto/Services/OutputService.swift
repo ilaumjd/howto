@@ -4,18 +4,14 @@ protocol OutputServiceProtocol {
     func output(answer: Answer) async throws
 }
 
-class OutputService: OutputServiceProtocol {
-    private let config: Config
-    private let batService: BatService
+struct OutputService: OutputServiceProtocol {
 
-    init(config: Config, batService: BatService = BatService()) {
-        self.config = config
-        self.batService = batService
-    }
+    let config: Config
 
-    func output(answer: Answer) async throws {
+    func output(answer: Answer) async {
         if config.useBat {
             do {
+                let batService = BatService(config: config)
                 try await batService.printUsingBat(answer: answer)
             } catch {
                 deafultOutput(answer: answer)

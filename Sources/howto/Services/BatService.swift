@@ -1,10 +1,12 @@
 import Foundation
 
 struct BatService {
-    private let fileManager: FileManager
-    private let processService: ProcessServiceProtocol
+    let config: Config
+    let fileManager: FileManager
+    let processService: ProcessServiceProtocol
     
-    init(fileManager: FileManager = .default, processService: ProcessServiceProtocol = ProcessService()) {
+    init(config: Config, fileManager: FileManager = .default, processService: ProcessServiceProtocol = ProcessService()) {
+        self.config = config
         self.fileManager = fileManager
         self.processService = processService
     }

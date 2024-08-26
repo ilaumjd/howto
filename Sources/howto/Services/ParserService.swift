@@ -2,8 +2,12 @@ import Foundation
 import SwiftSoup
 
 struct ParserService {
-    static func parseSearchResultLinks(htmlString: String, engine: SearchEngine) throws -> [String] {
+    
+    let config: Config
+    
+    func parseSearchResultLinks(htmlString: String) throws -> [String] {
         do {
+            let engine = config.engine
             let doc: Document = try SwiftSoup.parse(htmlString)
             let results: Elements = try doc.select(engine.resultSelector)
             
@@ -26,7 +30,7 @@ struct ParserService {
         }
     }
     
-    static func parseStackOverflowAnswer(url: String, htmlString: String) throws -> Answer {
+    func parseStackOverflowAnswer(url: String, htmlString: String) throws -> Answer {
         let doc: Document = try SwiftSoup.parse(htmlString)
         
         // Parse question title
