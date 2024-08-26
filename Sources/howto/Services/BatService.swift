@@ -3,15 +3,15 @@ import Foundation
 struct BatService {
     let config: Config
     let fileManager: FileManager
-    let processService: ProcessServiceProtocol
+    let processService: ProcessService
     
-    init(config: Config, fileManager: FileManager = .default, processService: ProcessServiceProtocol = ProcessService()) {
+    init(config: Config, fileManager: FileManager = .default, processService: ProcessService = ProcessService()) {
         self.config = config
         self.fileManager = fileManager
         self.processService = processService
     }
     
-    func printUsingBat(answer: Answer) async throws {
+    func printUsingBat(query: [String], answer: Answer) async throws {
         let batPath = try await getBatExecutablePath()
         let batLanguagesPath = try await createBatLanguagesFileIfNeeded(batPath: batPath)
         let batLanguages = try readBatLanguages(batLanguagesPath: batLanguagesPath)

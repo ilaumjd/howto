@@ -1,18 +1,14 @@
 import Foundation
 
-protocol OutputServiceProtocol {
-    func output(answer: Answer) async throws
-}
-
-struct OutputService: OutputServiceProtocol {
+struct OutputService {
 
     let config: Config
 
-    func output(answer: Answer) async {
+    func output(query: [String], answer: Answer) async {
         if config.useBat {
             do {
                 let batService = BatService(config: config)
-                try await batService.printUsingBat(answer: answer)
+                try await batService.printUsingBat(query: query, answer: answer)
             } catch {
                 deafultOutput(answer: answer)
             }
