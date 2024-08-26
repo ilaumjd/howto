@@ -46,7 +46,7 @@ import ArgumentParser
                 let answer = try parserService.parseStackOverflowAnswer(url: answerURL, htmlString: answerHtmlString)
                 
                 let outputService = OutputService(context: context)
-                await outputService.output(query: query, answer: answer)
+                await outputService.output(answer: answer)
             }
         }
         catch {

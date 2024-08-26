@@ -4,7 +4,7 @@ struct OutputService {
 
     let context: SearchContext
 
-    func output(query: [String], answer: Answer) async {
+    func output(answer: Answer) async {
         if context.config.useBat {
             do {
                 let batService = BatService(context: context)
