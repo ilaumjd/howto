@@ -33,17 +33,19 @@ import ArgumentParser
     
     private func howto(config: Config, query: [String]) async {
         do {
-            let searchService = SearchService(config: config)
+            let context = SearchContext(config: config, query: query)
+
+            let searchService = SearchService(context: context)
             let parserService = ParserService(config: config)
             
-            let resultHtmlString = try await searchService.performSearch(query: query)
+            let resultHtmlString = try await searchService.performSearch()
             let answerURLs = try parserService.parseSearchResultLinks(htmlString: resultHtmlString)
             
             for answerURL in answerURLs.prefix(config.num) {
                 let answerHtmlString = try await searchService.fetchHtmlPage(urlString: answerURL)
                 let answer = try parserService.parseStackOverflowAnswer(url: answerURL, htmlString: answerHtmlString)
                 
-                let outputService = OutputService(config: config)
+                let outputService = OutputService(context: context)
                 await outputService.output(query: query, answer: answer)
             }
         }

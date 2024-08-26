@@ -1,5 +1,10 @@
 import Foundation
 
+struct SearchContext {
+    let config: Config
+    let query: [String]
+}
+
 struct Answer {
     let url: String
     let questionTitle: String

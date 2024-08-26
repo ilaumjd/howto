@@ -2,22 +2,22 @@ import Foundation
 
 struct OutputService {
 
-    let config: Config
+    let context: SearchContext
 
     func output(query: [String], answer: Answer) async {
-        if config.useBat {
+        if context.config.useBat {
             do {
-                let batService = BatService(config: config)
-                try await batService.printUsingBat(query: query, answer: answer)
+                let batService = BatService(context: context)
+                try await batService.performBatOuput(answer: answer)
             } catch {
-                deafultOutput(answer: answer)
+                performDefaultOutput(answer: answer)
             }
         } else {
-            deafultOutput(answer: answer)
+            performDefaultOutput(answer: answer)
         }
     }
 
-    private func deafultOutput(answer: Answer) {
+    private func performDefaultOutput(answer: Answer) {
         if let snippet = answer.codeSnippets.first {
             print(snippet)
         } else {
