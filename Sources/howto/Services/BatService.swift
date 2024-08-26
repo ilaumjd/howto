@@ -35,26 +35,38 @@ struct BatService {
         }
     }
     
-    private func readBatLanguages(batLanguagesPath: String) throws -> Set<String> {
+    private func readBatLanguages(batLanguagesPath: String) throws -> [String] {
         do {
             let contents = try String(contentsOfFile: batLanguagesPath, encoding: .utf8)
-            return Set(contents.components(separatedBy: .newlines)
+            return contents.components(separatedBy: .newlines)
                 .flatMap { line -> [String] in
                     let parts = line.components(separatedBy: ":")
                     guard parts.count == 2 else { return [] }
                     let identifiers = parts[1].split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
                     return [parts[0].trimmingCharacters(in: .whitespacesAndNewlines).lowercased()] + identifiers
-                })
+                }
         } catch {
             throw BatServiceError.batLanguagesFileReadFailed(error)
         }
     }
-    
-    private func getOutputLanguage(batLanguages: Set<String>, answer: Answer) throws -> String {
-        guard let language = Set(answer.tags).intersection(batLanguages).first else {
-            throw BatServiceError.languageNotFound
+
+    private func getOutputLanguage(batLanguages: [String], answer: Answer) throws -> String {
+        let batLanguagesSet = Set(batLanguages)
+        
+        if let queryMatch = context.query.first(where: { batLanguagesSet.contains($0.lowercased()) }) {
+            return queryMatch.lowercased()
         }
-        return language
+        
+        if let tagMatch = answer.tags.first(where: { batLanguagesSet.contains($0.lowercased()) }) {
+            return tagMatch.lowercased()
+        }
+        
+        let titleTerms = answer.questionTitle.split(separator: " ").map { $0.lowercased() }
+        if let titleMatch = titleTerms.first(where: { batLanguagesSet.contains($0) }) {
+            return titleMatch
+        }
+        
+        throw BatServiceError.languageNotFound
     }
     
     private func getBatExecutablePath() async throws -> String {
