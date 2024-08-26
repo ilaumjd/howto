@@ -3,9 +3,9 @@ import Foundation
 struct BatService {
     let context: SearchContext
     let fileManager: FileManager
-    let processService: ProcessService
+    let processService: ProcessServiceProtocol
     
-    init(context: SearchContext, fileManager: FileManager = .default, processService: ProcessService = ProcessService()) {
+    init(context: SearchContext, fileManager: FileManager = .default, processService: ProcessServiceProtocol = ProcessService()) {
         self.context = context
         self.fileManager = fileManager
         self.processService = processService

@@ -1,6 +1,11 @@
 import Foundation
 
-struct ProcessService {
+protocol ProcessServiceProtocol {
+    func runProcessAndReturnOutput(executablePath: String, arguments: [String]) async throws -> String
+    func runProcessWithPipe(input: String, executablePath: String, arguments: [String]) async throws
+}
+
+struct ProcessService: ProcessServiceProtocol {
     func runProcessAndReturnOutput(executablePath: String, arguments: [String]) async throws -> String {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: executablePath)
