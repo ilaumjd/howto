@@ -7,7 +7,7 @@ struct Config {
     let num: Int
     let useBat: Bool
     
-    static func new(engineType: String, num: Int, useBat: Bool) -> Result<Config, ConfigError> {
+    static func new(engineType: String = "google", num: Int = 1, useBat: Bool = false) -> Result<Config, ConfigError> {
         let engine: SearchEngine
         switch engineType.lowercased() {
         case "google":
