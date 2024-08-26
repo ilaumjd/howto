@@ -35,14 +35,15 @@ import ArgumentParser
         do {
             let context = SearchContext(config: config, query: query)
 
-            let searchService = SearchService(context: context)
+            let webService = WebFetchService()
+            let searchService = SearchService(context: context, webService: webService)
             let parserService = ParserService(config: config)
             
             let resultHtmlString = try await searchService.performSearch()
             let answerURLs = try parserService.parseSearchResultLinks(htmlString: resultHtmlString)
             
             for answerURL in answerURLs.prefix(config.num) {
-                let answerHtmlString = try await searchService.fetchHtmlPage(urlString: answerURL)
+                let answerHtmlString = try await webService.fetchHtmlPage(urlString: answerURL)
                 let answer = try parserService.parseStackOverflowAnswer(url: answerURL, htmlString: answerHtmlString)
                 
                 let outputService = OutputService(context: context)

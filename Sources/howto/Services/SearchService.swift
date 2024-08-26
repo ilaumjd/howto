@@ -1,19 +1,18 @@
 import Foundation
-import SwiftSoup
 
 struct SearchService {
     private let context: SearchContext
-    private let session: URLSessionProtocol
+    private let webService: WebFetchService
     
-    init(context: SearchContext, session: URLSessionProtocol = URLSession.shared) {
+    init(context: SearchContext, webService: WebFetchService) {
         self.context = context
-        self.session = session
+        self.webService = webService
     }
     
     func performSearch() async throws -> String {
         let keyword = createKeyword(query: context.query)
         let urlString = createSearchURL(keyword: keyword)
-        return try await fetchHtmlPage(urlString: urlString)
+        return try await webService.fetchHtmlPage(urlString: urlString)
     }
     
     func createKeyword(query: [String]) -> String {
@@ -22,24 +21,5 @@ struct SearchService {
     
     func createSearchURL(keyword: String) -> String {
         String(format: context.config.engine.baseURL, keyword)
-    }
-    
-    func fetchHtmlPage(urlString: String) async throws -> String {
-        guard let url = URL(string: urlString) else {
-            throw SearchError.invalidURL
-        }
-        var request = URLRequest(url: url)
-        request.setValue(context.config.userAgent, forHTTPHeaderField: "User-Agent")
-        do {
-            let (data, _) = try await session.data(for: request)
-            guard let htmlString = String(data: data, encoding: .utf8), !htmlString.isEmpty else {
-                throw SearchError.noData
-            }
-            return htmlString
-        } catch let error as SearchError {
-            throw error
-        } catch {
-            throw SearchError.networkError(error)
-        }
     }
 }

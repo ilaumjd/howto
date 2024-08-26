@@ -5,7 +5,7 @@ enum ConfigError: Error {
     case invalidNumber
 }
 
-enum SearchError: Error {
+enum WebFetchError: Error {
     case invalidURL
     case noData
     case networkError(Error)
