@@ -1,133 +1,88 @@
-//import XCTest
-//@testable import howto
-//
-//class SearchServiceTests: XCTestCase {
-//    
-//    var mockConfig: Config!
-//    var mockEngine: MockSearchEngine!
-//    var mockSession: MockURLSession!
-//    var mockURL: URL!
-//    var service: SearchService!
-//    
-//    override func setUp() {
-//        super.setUp()
-//        mockEngine = MockSearchEngine()
-//        mockConfig = Config(engine: mockEngine, num: 5)
-//        mockSession = MockURLSession()
-//        mockURL = URL(string: "https://test.com/search?q=%@")
-//        service = SearchService(config: mockConfig, session: mockSession)
-//    }
-//    
-//    override func tearDown() {
-//        mockConfig = nil
-//        mockEngine = nil
-//        mockSession = nil
-//        mockURL = nil
-//        service = nil
-//        super.tearDown()
-//    }
-//    
-//    func testCreateKeyword() {
-//        let query = ["swift", "testing"]
-//        let keyword = service.createKeyword(query: query)
-//        XCTAssertEqual(keyword, "site:stackoverflow.com swift testing")
-//    }
-//    
-//    func testCreateURLSuccess() {
-//        let urlString = "https://test.com/search?q=swift%20testing"
-//        
-//        let result = service.createURL(urlString: urlString)
-//        
-//        switch result {
-//        case .success(let url):
-//            XCTAssertEqual("https://test.com/search?q=swift%20testing", url.absoluteString)
-//        case .failure:
-//            XCTFail("Create url should not fail")
-//        }
-//    }
-//    
-//    func testFetchHtmlPageSuccess() async {
-//        let expectedHTML = "<html><body>Test</body></html>"
-//        mockSession.data = expectedHTML.data(using: .utf8)
-//        
-//        let result = await service.fetchHtmlPage(url: mockURL)
-//        
-//        switch result {
-//        case .success(let html):
-//            XCTAssertEqual(html, expectedHTML)
-//        case .failure:
-//            XCTFail("FetchHtmlPage should not fail")
-//        }
-//    }
-//    
-//    func testFetchHtmlPageNoData() async {
-//        mockSession.data = nil
-//        
-//        let result = await service.fetchHtmlPage(url: mockURL)
-//        
-//        switch result {
-//        case .success:
-//            XCTFail("FetchHtmlPage should fail with no data")
-//        case .failure(let error):
-//            XCTAssertEqual(error.localizedDescription, HowtoError.noData.localizedDescription)
-//        }
-//    }
-//    
-//    func testFetchHtmlPageNetworkError() async {
-//        struct TestError: Error {}
-//        mockSession.error = TestError()
-//        
-//        let result = await service.fetchHtmlPage(url: mockURL)
-//        
-//        switch result {
-//        case .success:
-//            XCTFail("FetchHtmlPage should fail with network error")
-//        case .failure(let error):
-//            if case .networkError = error {
-//                XCTAssertEqual(error.localizedDescription, HowtoError.networkError(mockSession.error!).localizedDescription)
-//            } else {
-//                XCTFail("Incorrect error type")
-//            }
-//        }
-//    }
-//    
-//    func testPerformSearchSuccess() async {
-//            let query = ["swift", "testing"]
-//            let mockHTML = "<html><body>Test</body></html>"
-//            
-//            mockEngine.mockURLResult = .success(mockURL)
-//            mockSession.data = mockHTML.data(using: .utf8)
-//            
-//            let result = await service.performSearch(query: query)
-//            
-//            switch result {
-//            case .success(let htmlString):
-//                XCTAssertEqual(htmlString, "<html><body>Test</body></html>")
-//            case .failure:
-//                XCTFail("performSearch should not fail")
-//            }
-//        }
-//        
-//}
-//
-//class MockSearchEngine: SearchEngine {
-//    var baseURL: String = "https://test.com/search?q=%@"
-//    var resultSelector: String = ""
-//    var titleSelector: String = ""
-//    var linkSelector: String = ""
-//    var snippetSelector: String = ""
-//    
-//    var mockURLResult: Result<URL, HowtoError>!
-//}
-//
-//class MockURLSession: URLSessionProtocol {
-//    var data: Data?
-//    var error: Error?
-//    
-//    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-//        if let error = error {
-//            throw error
-//        }
-//        return (data ?? Data(), URLResponse())
-//    }
-//}
+import XCTest
+@testable import howto
+
+class SearchServiceTests: XCTestCase {
+
+    var mockContext: SearchContext!
+    var mockWebService: MockWebFetchService!
+    var service: SearchService!
+
+    override func setUp() {
+        super.setUp()
+        mockWebService = MockWebFetchService()
+        let mockConfig = Config(engine: MockSearchEngine(), num: 1, useBat: false)
+        mockContext = SearchContext(config: mockConfig, query: ["swift", "testing"])
+        service = SearchService(context: mockContext, webService: mockWebService)
+    }
+
+    override func tearDown() {
+        mockContext = nil
+        mockWebService = nil
+        service = nil
+        super.tearDown()
+    }
+    func testCreateKeywordAndSearchURL() {
+        let query = ["swift", "testing"]
+        let keyword = service.createKeyword(query: query)
+        let urlString = service.createSearchURL(keyword: keyword)
+        XCTAssertEqual(keyword, "site:stackoverflow.com swift testing")
+        XCTAssertEqual(urlString, "https://test.com/search?q=site:stackoverflow.com swift testing")
+    }
+
+    func testPerformSearchSuccess() async {
+        let mockHTML = "<html><body>Test</body></html>"
+        mockWebService.htmlResult = .success(mockHTML)
+
+        do {
+            let htmlString = try await service.performSearch()
+            XCTAssertEqual(htmlString, "<html><body>Test</body></html>")
+        } catch {
+            XCTFail("performSearch should not fail")
+        }
+    }
+
+    func testPerformSearchFailureInvalidURL() async {
+        mockWebService.htmlResult = .failure(.invalidURL)
+        do {
+            _ = try await service.performSearch()
+            XCTFail("performSearch should fail with invalid URL error")
+        } catch {
+            XCTAssertEqual(error.localizedDescription, WebFetchError.invalidURL.localizedDescription)
+        }
+    }
+
+    func testPerformSearchFailureNoData() async {
+        mockWebService.htmlResult = .failure(.noData)
+        do {
+            _ = try await service.performSearch()
+            XCTFail("performSearch should fail with no data error")
+        } catch {
+            XCTAssertEqual(error.localizedDescription, WebFetchError.noData.localizedDescription)
+        }
+    }
+}
+
+// Mock classes for testing
+
+class MockSearchEngine: SearchEngine {
+    var baseURL: String = "https://test.com/search?q=%@"
+    var resultSelector: String = ""
+    var titleSelector: String = ""
+    var linkSelector: String = ""
+    var snippetSelector: String = ""
+}
+
+class MockWebFetchService: WebFetchServiceProtocol {
+    var htmlResult: Result<String, WebFetchError>!
+
+    func fetchHtmlPage(urlString: String) async throws -> String {
+        switch htmlResult {
+        case .success(let html):
+            return html
+        case .failure(let error):
+            throw error
+        case .none:
+            throw WebFetchError.noData
+        }
+    }
+}

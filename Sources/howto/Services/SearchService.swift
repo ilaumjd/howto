@@ -2,9 +2,9 @@ import Foundation
 
 struct SearchService {
     private let context: SearchContext
-    private let webService: WebFetchService
+    private let webService: WebFetchServiceProtocol
     
-    init(context: SearchContext, webService: WebFetchService) {
+    init(context: SearchContext, webService: WebFetchServiceProtocol) {
         self.context = context
         self.webService = webService
     }

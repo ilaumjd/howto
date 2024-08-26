@@ -1,6 +1,10 @@
 import Foundation
 
-struct WebFetchService {
+protocol WebFetchServiceProtocol {
+    func fetchHtmlPage(urlString: String) async throws -> String
+}
+
+struct WebFetchService: WebFetchServiceProtocol {
 
     private let session: URLSessionProtocol
 
