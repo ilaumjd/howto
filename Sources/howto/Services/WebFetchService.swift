@@ -22,7 +22,8 @@ struct WebFetchService: WebFetchServiceProtocol {
         request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
         do {
             let (data, _) = try await session.data(for: request)
-            guard let htmlString = String(data: data, encoding: .utf8), !htmlString.isEmpty else {
+            let htmlString = String(decoding: data, as: UTF8.self)
+            guard !htmlString.isEmpty else {
                 throw WebFetchError.noData
             }
             return htmlString

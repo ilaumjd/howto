@@ -20,12 +20,8 @@ struct ProcessService: ProcessServiceProtocol {
             process.waitUntilExit()
 
             let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-            guard
-                let outputString = String(data: outputData, encoding: .utf8)?.trimmingCharacters(
-                    in: .whitespacesAndNewlines)
-            else {
-                throw ProcessError.outputParsingFailed
-            }
+            let outputString = String(decoding: outputData, as: UTF8.self)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
             return outputString
         } catch {
             throw ProcessError.executionFailed(error)

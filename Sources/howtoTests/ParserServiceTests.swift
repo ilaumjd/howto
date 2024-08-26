@@ -46,8 +46,7 @@ class ParserServiceTests: XCTestCase {
     func testParsingWithNoResults() throws {
         let htmlString = "<div></div>"
 
-        XCTAssertThrowsError(try parserService.parseSearchResultLinks(htmlString: htmlString)) {
-            error in
+        XCTAssertThrowsError(try parserService.parseSearchResultLinks(htmlString: htmlString)) { error in
             XCTAssertEqual(error.localizedDescription, ParserError.noResults.localizedDescription)
         }
     }
