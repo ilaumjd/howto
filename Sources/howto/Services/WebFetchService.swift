@@ -1,34 +1,32 @@
-import Foundation
+import AsyncHTTPClient
+import NIOCore
+import NIOHTTP1
 
 protocol WebFetchServiceProtocol {
     func fetchHtmlPage(urlString: String) async throws -> String
 }
 
 struct WebFetchService: WebFetchServiceProtocol {
-    private let session: URLSessionProtocol
+    private let httpClient: HTTPClient
+    let userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
 
-    let userAgent =
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
-
-    init(session: URLSessionProtocol = URLSession.shared) {
-        self.session = session
+    init(httpClient: HTTPClient = HTTPClient.shared) {
+        self.httpClient = httpClient
     }
 
     func fetchHtmlPage(urlString: String) async throws -> String {
-        guard let url = URL(string: urlString) else {
-            throw WebFetchError.invalidURL
-        }
-        var request = URLRequest(url: url)
-        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        var request = HTTPClientRequest(url: urlString)
+        request.headers.add(name: "User-Agent", value: userAgent)
         do {
-            let (data, _) = try await session.data(for: request)
-            let htmlString = String(decoding: data, as: UTF8.self)
-            guard !htmlString.isEmpty else {
+            let response = try await httpClient.execute(request, timeout: .seconds(30))
+            if response.status == .ok {
+                let body = try await response.body.collect(upTo: 1024 * 1024)
+                return String(buffer: body)
+            } else {
                 throw WebFetchError.noData
             }
-            return htmlString
-        } catch let error as WebFetchError {
-            throw error
+        } catch let error as HTTPClientError {
+            throw WebFetchError.networkError(error)
         } catch {
             throw WebFetchError.networkError(error)
         }
