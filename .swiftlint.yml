@@ -1,0 +1,6 @@
+included:
+  - Sources
+
+disabled_rules:
+  - opening_brace
+  - trailing_comma
