@@ -17,6 +17,7 @@ struct SearchService {
 
     func createKeyword(query: [String]) -> String {
         "site:\(context.config.site) \(query.joined(separator: " "))"
+            .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
     }
 
     func createSearchURL(keyword: String) -> String {

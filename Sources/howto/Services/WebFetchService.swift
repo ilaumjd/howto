@@ -1,6 +1,4 @@
 import AsyncHTTPClient
-import NIOCore
-import NIOHTTP1
 
 protocol WebFetchServiceProtocol {
     func fetchHtmlPage(urlString: String) async throws -> String
@@ -15,6 +13,7 @@ struct WebFetchService: WebFetchServiceProtocol {
     }
 
     func fetchHtmlPage(urlString: String) async throws -> String {
+        print(urlString)
         var request = HTTPClientRequest(url: urlString)
         request.headers.add(name: "User-Agent", value: userAgent)
         do {
