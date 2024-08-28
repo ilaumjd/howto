@@ -14,6 +14,9 @@ import Foundation
     @Option(name: .shortAndLong, help: "Number of answers to return")
     var num: Int = 1
 
+    @Flag(name: .shortAndLong, help: "Show source link of the answer")
+    var link: Bool = false
+
     @Flag(name: .shortAndLong, help: "Pipe output to bat for syntax highlighting")
     var bat: Bool = false
 
@@ -21,7 +24,10 @@ import Foundation
     var query: [String]
 
     mutating func run() async {
-        let configResult = Config.new(engineType: engineType, num: num, useBat: bat)
+        let configResult = Config.new(engineType: engineType,
+                                      num: num,
+                                      showLink: link,
+                                      useBat: bat)
         switch configResult {
         case let .success(config):
             await howto(config: config, query: query)

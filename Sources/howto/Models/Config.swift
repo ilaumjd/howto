@@ -5,11 +5,14 @@ struct Config {
 
     let engine: SearchEngine
     let num: Int
+    let showLink: Bool
     let useBat: Bool
 
-    static func new(engineType: String = "google", num: Int = 1, useBat: Bool = false) -> Result<
-        Config, ConfigError
-    > {
+    static func new(engineType: String = "google",
+                    num: Int = 1,
+                    showLink: Bool = false,
+                    useBat: Bool = false) -> Result<Config, ConfigError>
+    {
         let engine: SearchEngine
         switch engineType.lowercased() {
         case "google":
@@ -24,7 +27,10 @@ struct Config {
             return .failure(.invalidNumber)
         }
 
-        let config = Config(engine: engine, num: num, useBat: useBat)
+        let config = Config(engine: engine,
+                            num: num,
+                            showLink: showLink,
+                            useBat: useBat)
         return .success(config)
     }
 }
