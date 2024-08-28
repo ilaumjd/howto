@@ -3,7 +3,10 @@ import Foundation
 struct OutputService {
     let context: SearchContext
 
-    func output(answer: Answer) async {
+    func performOutput(index: Int, answer: Answer) async {
+        if index > 0 {
+            print("\n==============================================================\n")
+        }
         if context.config.useBat {
             do {
                 let batService = BatService(context: context)

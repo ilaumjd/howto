@@ -37,18 +37,18 @@ import Foundation
             let webService = WebFetchService()
             let searchService = SearchService(context: context, webService: webService)
             let parserService = ParserService(config: config)
+            let outputService = OutputService(context: context)
 
             let resultHtmlString = try await searchService.performSearch()
             let answerURLs = try parserService.parseSearchResultLinks(htmlString: resultHtmlString)
 
-            for answerURL in answerURLs.prefix(config.num) {
+            for (index, answerURL) in answerURLs.enumerated().prefix(config.num) {
                 let answerHtmlString = try await webService.fetchHtmlPage(urlString: answerURL)
                 let answer = try parserService.parseStackOverflowAnswer(
                     url: answerURL, htmlString: answerHtmlString
                 )
 
-                let outputService = OutputService(context: context)
-                await outputService.output(answer: answer)
+                await outputService.performOutput(index: index, answer: answer)
             }
         } catch {
             print(error)
