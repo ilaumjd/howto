@@ -41,11 +41,12 @@ import Foundation
             let context = SearchContext(config: config, query: query)
 
             let webService = WebFetchService()
-            let searchService = SearchService(context: context, webService: webService)
+            let searchService = SearchService(context: context)
             let parserService = ParserService(config: config)
             let outputService = OutputService(context: context)
 
-            let resultHtmlString = try await searchService.performSearch()
+            let urlString = try await searchService.performSearch()
+            let resultHtmlString = try await webService.fetchHtmlPage(urlString: urlString)
             let answerURLs = try parserService.parseSearchResultLinks(htmlString: resultHtmlString)
 
             for (index, answerURL) in answerURLs.enumerated().prefix(config.num) {

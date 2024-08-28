@@ -1,14 +1,11 @@
 import AsyncHTTPClient
 
-protocol WebFetchServiceProtocol {
-    func fetchHtmlPage(urlString: String) async throws -> String
-}
-
-struct WebFetchService: WebFetchServiceProtocol {
+struct WebFetchService: ~Copyable {
     private let httpClient: HTTPClient
-    let userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
+    let userAgent =
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
 
-    init(httpClient: HTTPClient = HTTPClient.shared) {
+    init(httpClient: HTTPClient = HTTPClient(eventLoopGroupProvider: .singleton)) {
         self.httpClient = httpClient
     }
 
@@ -16,7 +13,7 @@ struct WebFetchService: WebFetchServiceProtocol {
         var request = HTTPClientRequest(url: urlString)
         request.headers.add(name: "User-Agent", value: userAgent)
         do {
-            let response = try await httpClient.execute(request, timeout: .seconds(10))
+            let response = try await httpClient.execute(request, timeout: .seconds(5))
             if response.status == .ok {
                 let body = try await response.body.collect(upTo: 1024 * 1024)
                 return String(buffer: body)
@@ -28,5 +25,9 @@ struct WebFetchService: WebFetchServiceProtocol {
         } catch {
             throw WebFetchError.networkError(error)
         }
+    }
+
+    deinit {
+        _ = httpClient.shutdown()
     }
 }

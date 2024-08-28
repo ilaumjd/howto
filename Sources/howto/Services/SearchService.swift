@@ -1,18 +1,16 @@
 import Foundation
 
-struct SearchService {
+struct SearchService: ~Copyable {
     private let context: SearchContext
-    private let webService: WebFetchServiceProtocol
 
-    init(context: SearchContext, webService: WebFetchServiceProtocol) {
+    init(context: SearchContext) {
         self.context = context
-        self.webService = webService
     }
 
     func performSearch() async throws -> String {
         let keyword = createKeyword(query: context.query)
         let urlString = createSearchURL(keyword: keyword)
-        return try await webService.fetchHtmlPage(urlString: urlString)
+        return urlString
     }
 
     func createKeyword(query: [String]) -> String {
