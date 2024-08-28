@@ -30,24 +30,23 @@ import Foundation
                                       useBat: bat)
         switch configResult {
         case let .success(config):
-            await howto(config: config, query: query)
+            let context = SearchContext(config: config, query: query)
+            await howto(context: context)
         case let .failure(error):
             print("Config error: \(error)")
         }
     }
 
-    private func howto(config: Config, query: [String]) async {
+    private func howto(context: SearchContext) async {
+        let webService = WebFetchService()
+        let parserService = ParserService(config: context.config)
+        let outputService = OutputService(context: context)
+
         do {
-            let context = SearchContext(config: config, query: query)
-
-            let webService = WebFetchService()
-            let parserService = ParserService(config: config)
-            let outputService = OutputService(context: context)
-
             let resultHtmlString = try await webService.fetchHtmlPage(urlString: context.searchURL)
             let answerURLs = try parserService.parseSearchResultLinks(htmlString: resultHtmlString)
 
-            for (index, answerURL) in answerURLs.enumerated().prefix(config.num) {
+            for (index, answerURL) in answerURLs.prefix(context.config.num).enumerated() {
                 let answerHtmlString = try await webService.fetchHtmlPage(urlString: answerURL)
                 let answer = try parserService.parseStackOverflowAnswer(
                     url: answerURL, htmlString: answerHtmlString
