@@ -13,11 +13,10 @@ struct WebFetchService: WebFetchServiceProtocol {
     }
 
     func fetchHtmlPage(urlString: String) async throws -> String {
-        print(urlString)
         var request = HTTPClientRequest(url: urlString)
         request.headers.add(name: "User-Agent", value: userAgent)
         do {
-            let response = try await httpClient.execute(request, timeout: .seconds(30))
+            let response = try await httpClient.execute(request, timeout: .seconds(10))
             if response.status == .ok {
                 let body = try await response.body.collect(upTo: 1024 * 1024)
                 return String(buffer: body)
