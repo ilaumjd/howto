@@ -3,6 +3,12 @@ import Foundation
 struct SearchContext {
     let config: Config
     let query: [String]
+
+    var searchURL: String {
+        let keyword = "site:\(config.site) \(query.joined(separator: " "))"
+            .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        return String(format: config.engine.baseURL, keyword)
+    }
 }
 
 struct Answer {
