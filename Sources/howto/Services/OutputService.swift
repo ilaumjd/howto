@@ -27,10 +27,6 @@ struct OutputService {
     }
 
     private func performDefaultOutput(answer: Answer) {
-        if let snippet = answer.codeSnippets.first {
-            print(snippet)
-        } else {
-            print(answer.fullAnswer)
-        }
+        print(answer.answerToShow)
     }
 }

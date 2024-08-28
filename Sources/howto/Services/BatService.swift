@@ -19,7 +19,7 @@ struct BatService {
         let batLanguagesPath = try await createBatLanguagesFileIfNeeded(batPath: batPath)
         let batLanguages = try readBatLanguages(batLanguagesPath: batLanguagesPath)
         let language = try getOutputLanguage(batLanguages: batLanguages, answer: answer)
-        let text = (answer.codeSnippets.first ?? "") + "\n"
+        let text = answer.answerToShow + "\n"
         try await pipeToBat(input: text, batPath: batPath, language: language)
     }
 
