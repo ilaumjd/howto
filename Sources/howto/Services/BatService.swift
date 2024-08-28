@@ -1,6 +1,6 @@
 import Foundation
 
-struct BatService {
+struct BatService: ~Copyable {
     let context: SearchContext
     let fileManager: FileManager
     let processService: ProcessServiceProtocol

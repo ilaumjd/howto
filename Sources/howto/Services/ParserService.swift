@@ -1,7 +1,7 @@
 import Foundation
 import SwiftSoup
 
-struct ParserService {
+struct ParserService: ~Copyable {
     let config: Config
 
     func parseSearchResultLinks(htmlString: String) throws -> [String] {

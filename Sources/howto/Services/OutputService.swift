@@ -1,6 +1,6 @@
 import Foundation
 
-struct OutputService {
+struct OutputService: ~Copyable {
     let context: SearchContext
 
     func performOutput(index: Int, answer: Answer) async {
