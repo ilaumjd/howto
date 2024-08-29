@@ -24,6 +24,8 @@ import Foundation
     var query: [String]
 
     mutating func run() async {
+        try? Config.readConfigFile()
+        return
         let configResult = Config.new(engineType: engineType,
                                       num: num,
                                       showLink: link,

@@ -1,4 +1,5 @@
 import Foundation
+import TOMLKit
 
 struct Config {
     let site = "stackoverflow.com"
@@ -32,5 +33,16 @@ struct Config {
                             showLink: showLink,
                             useBat: useBat)
         return .success(config)
+    }
+
+    static func readConfigFile() throws {
+        let configFile = FileManager.default
+            .homeDirectoryForCurrentUser
+            .appendingPathComponent(".config/howto/howto.toml")
+            .path
+        let configToml = try String(contentsOfFile: configFile)
+
+        let table = try TOMLTable(string: configToml)
+        print(table)
     }
 }
