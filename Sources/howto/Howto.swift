@@ -4,8 +4,8 @@ import Foundation
 @main struct Howto: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "howto",
-        abstract: "Find answer for programming questions",
-        version: "0.0.1"
+        abstract: "Find answer for coding questions",
+        version: "0.0.2"
     )
 
     @Option(name: [.short, .customLong("engine")], help: "Search engine to use (google, bing)")
@@ -17,10 +17,10 @@ import Foundation
     @Flag(name: .shortAndLong, help: "Show source link of the answer")
     var link: Bool = false
 
-    @Flag(name: .shortAndLong, help: "Pipe output to bat for syntax highlighting")
+    @Flag(name: .shortAndLong, help: "Use bat for syntax highlighting")
     var bat: Bool = false
 
-    @Argument(help: "The programming question you want to ask")
+    @Argument(help: "Coding question you want to ask")
     var query: [String]
 
     mutating func run() async {
