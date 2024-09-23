@@ -24,10 +24,11 @@ import Foundation
     var query: [String]
 
     mutating func run() async {
-        let configResult = Config.new(engineType: engineType,
-                                      num: num,
-                                      showLink: link,
-                                      useBat: bat)
+        let configResult = Config.new(
+            num: num,
+            showLink: link,
+            useBat: bat
+        )
         switch configResult {
         case let .success(config):
             let context = SearchContext(config: config, query: query)
