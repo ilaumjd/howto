@@ -1,25 +1,33 @@
 import Foundation
 import SwiftSoup
 
-typealias SearchEngine = SearchEngineURL & SearchResultParser
+/// Combines both URL-building and selector-providing capabilities into a single search engine type.
+typealias SearchEngine = SearchEngineURL & SearchResultSelectors
 
+/// A search engine that can provide a templated search URL.
 protocol SearchEngineURL {
+    /// The base search URL template with a `%@` placeholder for the query string.
     var baseURL: String { get }
 }
 
-protocol SearchResultParser {
+/// A search engine that provides CSS selectors for parsing SERP results.
+protocol SearchResultSelectors {
+    /// CSS selector for individual result containers on the SERP.
     var resultSelector: String { get }
+    /// CSS selector for extracting the link from a result container.
     var linkSelector: String { get }
 }
 
-struct GoogleEngine: SearchEngineURL, SearchResultParser {
+/// Google search engine implementation with Google-specific CSS selectors.
+struct GoogleEngine: SearchEngineURL, SearchResultSelectors {
     let baseURL: String = "https://www.google.com/search?q=%@&hl=en"
 
     let resultSelector = "div.g"
     let linkSelector = "a"
 }
 
-struct BingEngine: SearchEngineURL, SearchResultParser {
+/// Bing search engine implementation with Bing-specific CSS selectors.
+struct BingEngine: SearchEngineURL, SearchResultSelectors {
     let baseURL: String = "https://www.bing.com/search?q=%@"
 
     let resultSelector = "li.b_algo"

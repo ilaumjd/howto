@@ -1,10 +1,20 @@
 import Foundation
 
-struct BatService: ~Copyable {
+/// Orchestrates syntax-highlighted output via the `bat` command-line tool.
+/// Determines the output language based on query terms, answer tags, or question title.
+struct BatService {
+    /// The search context including configuration and query terms.
     let context: SearchContext
+    /// File manager for cache and file operations (injectable for testing).
     let fileManager: FileManager
+    /// Process runner abstraction (injectable for testing).
     let processService: ProcessServiceProtocol
 
+    /// Creates a bat service with optional dependency injection.
+    /// - Parameters:
+    ///   - context: The current search context.
+    ///   - fileManager: File manager instance (default: `.default`).
+    ///   - processService: Process runner instance (default: `ProcessService()`).
     init(
         context: SearchContext, fileManager: FileManager = .default,
         processService: ProcessServiceProtocol = ProcessService()
@@ -14,7 +24,10 @@ struct BatService: ~Copyable {
         self.processService = processService
     }
 
-    func performBatOuput(answer: Answer) async throws {
+    /// Pipes the answer text through bat for syntax-highlighted output.
+    /// Locates bat, ensures the language mapping file exists, resolves the
+    /// output language, and pipes the text through bat.
+    func performBatOutput(answer: Answer) async throws {
         let batPath = try await getBatExecutablePath()
         let batLanguagesPath = try await createBatLanguagesFileIfNeeded(batPath: batPath)
         let batLanguages = try readBatLanguages(batLanguagesPath: batLanguagesPath)
@@ -64,7 +77,7 @@ struct BatService: ~Copyable {
     private func getOutputLanguage(batLanguages: [String], answer: Answer) throws -> String {
         let batLanguagesSet = Set(batLanguages)
 
-        if let queryMatch = context.query.first(where: { batLanguagesSet.contains($0.lowercased()) }) {
+        if let queryMatch = context.queryTerms.first(where: { batLanguagesSet.contains($0.lowercased()) }) {
             return queryMatch.lowercased()
         }
 
@@ -82,8 +95,8 @@ struct BatService: ~Copyable {
 
     private func getBatExecutablePath() async throws -> String {
         do {
-            return try await processService.runProcessAndReturnOutput(
-                executablePath: "/bin/sh", arguments: ["-c", "command -v bat"]
+            return try await processService.runProcessReturningOutput(
+                executablePath: ProcessService.shellPath, arguments: ["-c", "command -v bat"]
             )
         } catch {
             throw BatServiceError.batNotFound
@@ -92,7 +105,7 @@ struct BatService: ~Copyable {
 
     private func getBatLanguagesFile(batPath: String) async throws -> String {
         do {
-            return try await processService.runProcessAndReturnOutput(
+            return try await processService.runProcessReturningOutput(
                 executablePath: batPath, arguments: ["--list-languages"]
             )
         } catch {

@@ -4,7 +4,7 @@ import XCTest
 
 class ConfigTests: XCTestCase {
     func testNewConfigWithGoogleEngine() {
-        let result = Config.new(engineType: "google", num: 5)
+        let result = Config.create(engineType: "google", num: 5)
 
         switch result {
         case let .success(config):
@@ -16,7 +16,7 @@ class ConfigTests: XCTestCase {
     }
 
     func testNewConfigWithBingEngine() {
-        let result = Config.new(engineType: "bing", num: 10)
+        let result = Config.create(engineType: "bing", num: 10)
 
         switch result {
         case let .success(config):
@@ -28,7 +28,7 @@ class ConfigTests: XCTestCase {
     }
 
     func testNewConfigWithInvalidEngine() {
-        let result = Config.new(engineType: "yahoo", num: 5)
+        let result = Config.create(engineType: "yahoo", num: 5)
 
         switch result {
         case .success:
@@ -39,7 +39,7 @@ class ConfigTests: XCTestCase {
     }
 
     func testNewConfigCaseInsensitivity() {
-        let result = Config.new(engineType: "GoOgLe", num: 5)
+        let result = Config.create(engineType: "GoOgLe", num: 5)
 
         switch result {
         case let .success(config):
@@ -50,7 +50,7 @@ class ConfigTests: XCTestCase {
     }
 
     func testNewConfigWithInvalidNumber() {
-        let result = Config.new(engineType: "google", num: 0)
+        let result = Config.create(engineType: "google", num: 0)
 
         switch result {
         case .success:
