@@ -9,6 +9,26 @@ struct AnswerParser {
     ///   - htmlString: The raw HTML of the answer page.
     /// - Returns: A fully populated `Answer` struct.
     /// - Throws: `ParserError.noAnswer` or `ParserError.noAnswerBody` if parsing fails.
+    /// Extracts code snippets and full answer text from an answer body HTML fragment.
+    func parseBody(htmlString: String) throws -> (codeSnippets: [String], fullAnswer: String) {
+        let doc: Document = try SwiftSoup.parse(htmlString)
+        guard let body = doc.body() else {
+            throw ParserError.noAnswerBody
+        }
+
+        let preCodeBlocks = try body.select("pre code")
+        let codeSnippets: [String]
+        if preCodeBlocks.isEmpty() {
+            let codeBlocks = try body.select("code")
+            codeSnippets = try codeBlocks.map { try $0.htmlDecoded() }
+        } else {
+            codeSnippets = try preCodeBlocks.map { try $0.htmlDecoded() }
+        }
+
+        let fullAnswer = try body.htmlDecoded()
+        return (codeSnippets: codeSnippets, fullAnswer: fullAnswer)
+    }
+
     func parse(url: String, htmlString: String) throws -> Answer {
         let doc: Document = try SwiftSoup.parse(htmlString)
 
@@ -60,7 +80,6 @@ struct AnswerParser {
         // Parse full answer text
         let fullAnswer = try answerBody.htmlDecoded()
 
-        // Create Answer
         return Answer(
             url: url,
             questionTitle: questionTitle,

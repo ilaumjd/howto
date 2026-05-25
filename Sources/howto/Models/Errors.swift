@@ -12,7 +12,7 @@ extension FileHandle: @retroactive TextOutputStream {
 }
 
 /// Global stderr stream for use with `print(..., to: &stdErr)`
-var stdErr = FileHandle.standardError
+nonisolated(unsafe) var stdErr = FileHandle.standardError
 
 // MARK: - Existing error types
 

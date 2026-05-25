@@ -11,7 +11,7 @@ protocol SearchEngineURL {
 }
 
 /// A search engine that provides CSS selectors for parsing SERP results.
-protocol SearchResultSelectors {
+protocol SearchResultSelectors: Sendable {
     /// CSS selector for individual result containers on the SERP.
     var resultSelector: String { get }
     /// CSS selector for extracting the link from a result container.
